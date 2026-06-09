@@ -116,6 +116,8 @@ class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._last_ip: str | None = None
         self._last_update_times: dict[str, datetime] = {}
         self._last_update_results: dict[str, tuple[str | None, str | None]] = {}
+        self._last_sent_ip4: dict[str, str] = {}
+        self._last_sent_ip6: dict[str, str] = {}
         self._error_backoff: dict[str, datetime] = {}
         self._force_update: bool = False
         self._session: aiohttp.ClientSession | None = None
@@ -151,77 +153,10 @@ class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._force_update = False
         now = datetime.now(timezone.utc)
 
-        domain_data: dict[str, Any] = {}
-        for domain in self.domains:
-            resolved_ip = await async_resolve_ip(domain)
-            resolved_ip6: str | None = None
-            if self.ipv6_enabled:
-                resolved_ip6 = await async_resolve_ipv6(domain)
-            _LOGGER.debug(
-                "[%s] DNS resolved %s -> A=%s AAAA=%s",
-                self.account_name, domain, resolved_ip, resolved_ip6,
-            )
-
-            ipv4_mismatch = resolved_ip is None or resolved_ip != public_ip
-            ipv6_mismatch = (
-                self.ipv6_enabled
-                and public_ip6 is not None
-                and (resolved_ip6 is None or resolved_ip6 != public_ip6)
-            )
-            needs_update = force or ipv4_mismatch or ipv6_mismatch
-
-            backoff_until = self._error_backoff.get(domain)
-            in_backoff = not force and backoff_until is not None and now < backoff_until
-
-            update_status: str | None
-            update_response: str | None
-
-            if needs_update and in_backoff:
-                remaining = int((backoff_until - now).total_seconds())
-                _LOGGER.debug(
-                    "[%s] %s in error backoff, retry in %ds",
-                    self.account_name, domain, remaining,
-                )
-                update_status, update_response = self._last_update_results.get(domain, (None, None))
-
-            elif needs_update:
-                reason = "forced" if force else f"A={resolved_ip} AAAA={resolved_ip6}"
-                _LOGGER.debug(
-                    "[%s] Updating %s (public=%s/%s, %s)",
-                    self.account_name, domain, public_ip, public_ip6, reason,
-                )
-                ip6_to_send = public_ip6 if self.ipv6_enabled and public_ip6 else None
-                update_status, update_response = await self._update_domain(domain, public_ip, ip6_to_send)
-                self._last_update_results[domain] = (update_status, update_response)
-
-                if update_status == "ok":
-                    self._error_backoff.pop(domain, None)
-                    self._last_update_times[domain] = now
-                else:
-                    code = (update_response or "").split()[0]
-                    backoff_secs = _ERROR_BACKOFF.get(code, _DEFAULT_BACKOFF)
-                    self._error_backoff[domain] = now + timedelta(seconds=backoff_secs)
-                    _LOGGER.warning(
-                        "[%s] %s failed (%s), next retry in %ds",
-                        self.account_name, domain, update_response, backoff_secs,
-                    )
-
-            else:
-                self._error_backoff.pop(domain, None)
-                self._last_update_results.pop(domain, None)
-                update_status, update_response = None, None
-                _LOGGER.debug("[%s] %s DNS up to date — skipping", self.account_name, domain)
-
-            domain_data[domain] = {
-                "resolved_ip": resolved_ip,
-                "resolved_ip6": resolved_ip6,
-                "ip_mismatch": ipv4_mismatch,
-                "ip6_mismatch": ipv6_mismatch if self.ipv6_enabled else None,
-                "update_status": update_status,
-                "update_response": update_response,
-                "last_update_time": self._last_update_times.get(domain),
-                "backoff_until": self._error_backoff.get(domain),
-            }
+        results = await asyncio.gather(
+            *[self._process_domain(domain, public_ip, public_ip6, force, now) for domain in self.domains]
+        )
+        domain_data = dict(results)
 
         self._last_ip = public_ip
         result = {
@@ -233,6 +168,94 @@ class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         }
         await self._async_handle_notifications(domain_data, public_ip, public_ip6)
         return result
+
+    async def _process_domain(
+        self,
+        domain: str,
+        public_ip: str,
+        public_ip6: str | None,
+        force: bool,
+        now: datetime,
+    ) -> tuple[str, dict[str, Any]]:
+        resolved_ip = await async_resolve_ip(domain)
+        resolved_ip6: str | None = None
+        if self.ipv6_enabled:
+            resolved_ip6 = await async_resolve_ipv6(domain)
+        _LOGGER.debug(
+            "[%s] DNS resolved %s -> A=%s AAAA=%s",
+            self.account_name, domain, resolved_ip, resolved_ip6,
+        )
+
+        ipv4_mismatch = resolved_ip is None or resolved_ip != public_ip
+        ipv6_mismatch = (
+            self.ipv6_enabled
+            and public_ip6 is not None
+            and (resolved_ip6 is None or resolved_ip6 != public_ip6)
+        )
+
+        # Trigger update only when public IP changed since last successful send.
+        # This avoids re-sending to Strato while DNS is still propagating after an update.
+        ip4_needs_send = public_ip != self._last_sent_ip4.get(domain)
+        ip6_needs_send = (
+            self.ipv6_enabled
+            and public_ip6 is not None
+            and public_ip6 != self._last_sent_ip6.get(domain)
+        )
+        needs_update = force or ip4_needs_send or ip6_needs_send
+
+        backoff_until = self._error_backoff.get(domain)
+        in_backoff = not force and backoff_until is not None and now < backoff_until
+
+        update_status: str | None
+        update_response: str | None
+
+        if needs_update and in_backoff:
+            remaining = int((backoff_until - now).total_seconds())
+            _LOGGER.debug(
+                "[%s] %s in error backoff, retry in %ds",
+                self.account_name, domain, remaining,
+            )
+            update_status, update_response = self._last_update_results.get(domain, (None, None))
+
+        elif needs_update:
+            prev = self._last_sent_ip4.get(domain, "none")
+            reason = "forced" if force else f"{prev} -> {public_ip}"
+            _LOGGER.debug("[%s] Updating %s (%s)", self.account_name, domain, reason)
+            ip6_to_send = public_ip6 if self.ipv6_enabled and public_ip6 else None
+            update_status, update_response = await self._update_domain(domain, public_ip, ip6_to_send)
+            self._last_update_results[domain] = (update_status, update_response)
+
+            if update_status == "ok":
+                self._error_backoff.pop(domain, None)
+                self._last_update_times[domain] = now
+                self._last_sent_ip4[domain] = public_ip
+                if ip6_to_send:
+                    self._last_sent_ip6[domain] = ip6_to_send
+            else:
+                code = (update_response or "").split()[0]
+                backoff_secs = _ERROR_BACKOFF.get(code, _DEFAULT_BACKOFF)
+                self._error_backoff[domain] = now + timedelta(seconds=backoff_secs)
+                _LOGGER.warning(
+                    "[%s] %s failed (%s), next retry in %ds",
+                    self.account_name, domain, update_response, backoff_secs,
+                )
+
+        else:
+            self._error_backoff.pop(domain, None)
+            self._last_update_results.pop(domain, None)
+            update_status, update_response = None, None
+            _LOGGER.debug("[%s] %s already up to date — skipping", self.account_name, domain)
+
+        return domain, {
+            "resolved_ip": resolved_ip,
+            "resolved_ip6": resolved_ip6,
+            "ip_mismatch": ipv4_mismatch,
+            "ip6_mismatch": ipv6_mismatch if self.ipv6_enabled else None,
+            "update_status": update_status,
+            "update_response": update_response,
+            "last_update_time": self._last_update_times.get(domain),
+            "backoff_until": self._error_backoff.get(domain),
+        }
 
     async def _update_domain(self, domain: str, ip: str, ip6: str | None = None) -> tuple[str, str]:
         try:

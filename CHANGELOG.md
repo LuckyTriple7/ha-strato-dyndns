@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.7] - 2026-06-09
+### Changed
+- Domain processing is now parallel: DNS resolution and Strato API calls for all domains run concurrently (`asyncio.gather`)
+### Fixed
+- After a successful Strato update, subsequent polls no longer re-send to Strato while DNS is still propagating
+  - Update is now triggered by "public IP changed since last successful send", not by DNS mismatch
+  - The IP mismatch sensor still shows `ON` during propagation (intended — useful for monitoring), but no duplicate API call is made
+
 ## [0.1.6] - 2026-06-09
 ### Fixed
 - Account error sensor now aggregates ALL per-domain problem sensors: `ON` when any domain has an update error, IPv4 mismatch, or IPv6 mismatch
