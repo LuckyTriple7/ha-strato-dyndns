@@ -1,0 +1,44 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Strato DynDNS Account",
+        "description": "Enter the credentials for your Strato DynDNS account.",
+        "data": {
+          "account_name": "Account Name",
+          "username": "Username",
+          "password": "Password"
+        }
+      },
+      "domains": {
+        "title": "Domains",
+        "description": "Enter all domains and subdomains to be managed (comma-separated). Example: home.example.de, vpn.example.de",
+        "data": {
+          "domains": "Domains (comma-separated)",
+          "update_interval": "Check interval (minutes)"
+        }
+      }
+    },
+    "error": {
+      "no_domains": "Please enter at least one domain."
+    },
+    "abort": {
+      "already_configured": "This account is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options",
+        "description": "Update the managed domains or the check interval.",
+        "data": {
+          "domains": "Domains (comma-separated)",
+          "update_interval": "Check interval (minutes)"
+        }
+      }
+    },
+    "error": {
+      "no_domains": "Please enter at least one domain."
+    }
+  }
+}
