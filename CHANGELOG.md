@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.2] - 2026-06-09
+### Added
+- Error backoff per domain: after a failed update, retries are paused to avoid making errors worse
+  - `abuse` → 15 min, `badauth` / `notfqdn` → 30 min, `dnserr` / `badsys` / `911` → 5 min, other errors → 2 min
+- Error sensor stays `ON` during backoff (last known error result is preserved)
+- `retry_after` attribute on the resolved-IP sensor when a domain is in backoff
+- "Update Now" button bypasses backoff and forces an immediate retry
+
 ## [0.1.1] - 2026-06-09
 ### Changed
 - Entity naming cleaned up (breaking change — delete and re-add the integration)

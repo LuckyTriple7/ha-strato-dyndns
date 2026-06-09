@@ -91,6 +91,8 @@ class StratoDomainResolvedIPSensor(CoordinatorEntity[StratoDynDNSCoordinator], S
             attrs["update_response_detail"] = STRATO_RESPONSE_DESCRIPTIONS.get(
                 code, response
             )
+        if d.get("backoff_until"):
+            attrs["retry_after"] = d["backoff_until"].isoformat()
         return attrs
 
 
