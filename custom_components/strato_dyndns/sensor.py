@@ -20,11 +20,15 @@ async def async_setup_entry(
 ) -> None:
     coordinator: StratoDynDNSCoordinator = hass.data[DOMAIN][entry.entry_id]
     entities: list[SensorEntity] = [
-        StratoPublicIPSensor(coordinator, entry),
+        StratoPublicIPv4Sensor(coordinator, entry),
     ]
+    if coordinator.ipv6_enabled:
+        entities.append(StratoPublicIPv6Sensor(coordinator, entry))
     for domain in coordinator.domains:
         entities.append(StratoDomainResolvedIPSensor(coordinator, entry, domain))
         entities.append(StratoDomainLastUpdateSensor(coordinator, entry, domain))
+        if coordinator.ipv6_enabled:
+            entities.append(StratoDomainResolvedIPv6Sensor(coordinator, entry, domain))
     async_add_entities(entities)
 
 
@@ -37,13 +41,13 @@ def _device_info(coordinator: StratoDynDNSCoordinator) -> DeviceInfo:
     )
 
 
-class StratoPublicIPSensor(CoordinatorEntity[StratoDynDNSCoordinator], SensorEntity):
+class StratoPublicIPv4Sensor(CoordinatorEntity[StratoDynDNSCoordinator], SensorEntity):
     _attr_icon = "mdi:ip-network"
 
     def __init__(self, coordinator: StratoDynDNSCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator)
-        self._attr_unique_id = f"{entry.entry_id}_public_ip"
-        self._attr_name = f"{coordinator.account_name} Public IP"
+        self._attr_unique_id = f"{entry.entry_id}_public_ipv4"
+        self._attr_name = f"{coordinator.account_name} Public IPv4"
         self._attr_device_info = _device_info(coordinator)
 
     @property
@@ -51,6 +55,35 @@ class StratoPublicIPSensor(CoordinatorEntity[StratoDynDNSCoordinator], SensorEnt
         if not self.coordinator.data:
             return None
         return self.coordinator.data.get("public_ip")
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        if not self.coordinator.data:
+            return {}
+        return {"provider": self.coordinator.data.get("public_ip_provider")}
+
+
+class StratoPublicIPv6Sensor(CoordinatorEntity[StratoDynDNSCoordinator], SensorEntity):
+    _attr_icon = "mdi:ip-network-outline"
+
+    def __init__(self, coordinator: StratoDynDNSCoordinator, entry: ConfigEntry) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{entry.entry_id}_public_ipv6"
+        # No account prefix — public IPv6 is network-wide, not per account
+        self._attr_name = "Public IPv6"
+        self._attr_device_info = _device_info(coordinator)
+
+    @property
+    def native_value(self) -> str | None:
+        if not self.coordinator.data:
+            return None
+        return self.coordinator.data.get("public_ip6")
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        if not self.coordinator.data:
+            return {}
+        return {"provider": self.coordinator.data.get("public_ip6_provider")}
 
 
 class StratoDomainResolvedIPSensor(CoordinatorEntity[StratoDynDNSCoordinator], SensorEntity):
@@ -88,12 +121,40 @@ class StratoDomainResolvedIPSensor(CoordinatorEntity[StratoDynDNSCoordinator], S
             "update_response": response or None,
         }
         if code:
-            attrs["update_response_detail"] = STRATO_RESPONSE_DESCRIPTIONS.get(
-                code, response
-            )
+            attrs["update_response_detail"] = STRATO_RESPONSE_DESCRIPTIONS.get(code, response)
         if d.get("backoff_until"):
             attrs["retry_after"] = d["backoff_until"].isoformat()
         return attrs
+
+
+class StratoDomainResolvedIPv6Sensor(CoordinatorEntity[StratoDynDNSCoordinator], SensorEntity):
+    _attr_icon = "mdi:dns-outline"
+
+    def __init__(
+        self,
+        coordinator: StratoDynDNSCoordinator,
+        entry: ConfigEntry,
+        domain: str,
+    ) -> None:
+        super().__init__(coordinator)
+        slug = domain.replace(".", "_").replace("-", "_")
+        self._attr_unique_id = f"{entry.entry_id}_{slug}_resolved_ipv6"
+        self._attr_name = f"{coordinator.account_name} Domain {domain} Resolved IPv6"
+        self._attr_device_info = _device_info(coordinator)
+        self._domain = domain
+
+    @property
+    def native_value(self) -> str | None:
+        if not self.coordinator.data:
+            return None
+        return self.coordinator.data["domains"].get(self._domain, {}).get("resolved_ip6")
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        if not self.coordinator.data:
+            return {}
+        d = self.coordinator.data["domains"].get(self._domain, {})
+        return {"public_ip6": self.coordinator.data.get("public_ip6")}
 
 
 class StratoDomainLastUpdateSensor(CoordinatorEntity[StratoDynDNSCoordinator], SensorEntity):

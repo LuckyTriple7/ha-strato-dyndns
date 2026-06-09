@@ -3,6 +3,7 @@ DOMAIN = "strato_dyndns"
 CONF_ACCOUNT_NAME = "account_name"
 CONF_DOMAINS = "domains"
 CONF_UPDATE_INTERVAL = "update_interval"
+CONF_IPV6_ENABLED = "ipv6_enabled"
 
 DEFAULT_UPDATE_INTERVAL = 30  # seconds
 
@@ -27,6 +28,12 @@ IP_PROVIDERS = [
     "https://api.ipify.org",
     "https://checkip.amazonaws.com",
     "https://ifconfig.me/ip",
+]
+
+IPv6_PROVIDERS = [
+    "https://api6.ipify.org",
+    "https://checkipv6.amazonaws.com",
+    "https://v6.ident.me",
 ]
 
 # Strato response codes

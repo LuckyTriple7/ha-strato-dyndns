@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.3] - 2026-06-09
+### Added
+- Optional IPv6 support (enable per account in config/options)
+- Public IPv6 sensor (`sensor.strato_dyndns_public_ipv6`) — network-wide, no account prefix
+- Public IPv4 sensor renamed to `…_public_ipv4` with `provider` attribute (breaking rename)
+- Resolved IPv6 sensor per domain (AAAA DNS lookup via 1.1.1.1/8.8.8.8)
+- IPv6 mismatch binary sensor per domain
+- Update trigger: OR logic — update when IPv4 OR IPv6 DNS doesn't match public IP
+- Strato update sends `myip=<ipv4>,<ipv6>` when IPv6 is active
+
 ## [0.1.2] - 2026-06-09
 ### Added
 - Error backoff per domain: after a failed update, retries are paused to avoid making errors worse
