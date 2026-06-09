@@ -12,6 +12,15 @@ from custom_components.strato_dyndns.const import (
 
 from tests.conftest import MOCK_CONFIG
 
+DOMAIN_INPUT = {
+    "domain_main": "",
+    "domain_1": "home.example.de",
+    "domain_2": "vpn.example.de",
+    "domain_3": "", "domain_4": "", "domain_5": "",
+    "domain_6": "", "domain_7": "", "domain_8": "",
+    "domain_9": "", "domain_10": "",
+}
+
 
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
@@ -38,21 +47,13 @@ class TestConfigFlow:
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_ACCOUNT_NAME: "TestAccount",
-                "username": "testuser",
-                "password": "testpass",
-            },
+            {CONF_ACCOUNT_NAME: "TestAccount", "username": "u", "password": "p"},
         )
-        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "domains"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_DOMAINS: "home.example.de, vpn.example.de",
-                CONF_UPDATE_INTERVAL: 60,
-            },
+            {**DOMAIN_INPUT, CONF_UPDATE_INTERVAL: 60},
         )
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == "TestAccount"
@@ -65,21 +66,20 @@ class TestConfigFlow:
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_ACCOUNT_NAME: "TestAccount",
-                "username": "testuser",
-                "password": "testpass",
-            },
+            {CONF_ACCOUNT_NAME: "TestAccount", "username": "u", "password": "p"},
         )
+        empty_input = {f: "" for f in [
+            "domain_main", "domain_1", "domain_2", "domain_3", "domain_4",
+            "domain_5", "domain_6", "domain_7", "domain_8", "domain_9", "domain_10",
+        ]}
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_DOMAINS: "   ,  , ", CONF_UPDATE_INTERVAL: 30},
+            {**empty_input, CONF_UPDATE_INTERVAL: 30},
         )
         assert result["type"] == FlowResultType.FORM
         assert "no_domains" in result["errors"].values()
 
-    async def test_duplicate_account_aborted(self, hass):
-        # First entry
+    async def test_main_domain_only(self, hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -87,22 +87,36 @@ class TestConfigFlow:
             result["flow_id"],
             {CONF_ACCOUNT_NAME: "TestAccount", "username": "u", "password": "p"},
         )
-        await hass.config_entries.flow.async_configure(
+        main_only = {f: "" for f in [
+            "domain_main", "domain_1", "domain_2", "domain_3", "domain_4",
+            "domain_5", "domain_6", "domain_7", "domain_8", "domain_9", "domain_10",
+        ]}
+        main_only["domain_main"] = "example.de"
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_DOMAINS: "home.example.de", CONF_UPDATE_INTERVAL: 30},
+            {**main_only, CONF_UPDATE_INTERVAL: 30},
         )
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["data"][CONF_DOMAINS] == ["example.de"]
 
-        # Second entry with same account name
-        result2 = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        result2 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
-            {CONF_ACCOUNT_NAME: "TestAccount", "username": "u", "password": "p"},
-        )
-        result2 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
-            {CONF_DOMAINS: "other.example.de", CONF_UPDATE_INTERVAL: 30},
-        )
-        assert result2["type"] == FlowResultType.ABORT
-        assert result2["reason"] == "already_configured"
+    async def test_duplicate_account_aborted(self, hass):
+        for flow_id_account in ["TestAccount", "TestAccount"]:
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_USER}
+            )
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {CONF_ACCOUNT_NAME: flow_id_account, "username": "u", "password": "p"},
+            )
+            single = {f: "" for f in [
+                "domain_main", "domain_1", "domain_2", "domain_3", "domain_4",
+                "domain_5", "domain_6", "domain_7", "domain_8", "domain_9", "domain_10",
+            ]}
+            single["domain_1"] = "home.example.de"
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {**single, CONF_UPDATE_INTERVAL: 30},
+            )
+
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "already_configured"

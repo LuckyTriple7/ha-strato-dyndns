@@ -12,9 +12,19 @@
       },
       "domains": {
         "title": "Domains",
-        "description": "Enter all domains and subdomains to be managed (comma-separated). Example: home.example.de, vpn.example.de",
+        "description": "Enter the domains to manage. At least one field must be filled.",
         "data": {
-          "domains": "Domains (comma-separated)",
+          "domain_main": "Main domain (e.g. example.de)",
+          "domain_1": "Subdomain 1",
+          "domain_2": "Subdomain 2",
+          "domain_3": "Subdomain 3",
+          "domain_4": "Subdomain 4",
+          "domain_5": "Subdomain 5",
+          "domain_6": "Subdomain 6",
+          "domain_7": "Subdomain 7",
+          "domain_8": "Subdomain 8",
+          "domain_9": "Subdomain 9",
+          "domain_10": "Subdomain 10",
           "update_interval": "Check interval (seconds, min. 30)"
         }
       }
@@ -32,7 +42,17 @@
         "title": "Options",
         "description": "Update the managed domains or the check interval.",
         "data": {
-          "domains": "Domains (comma-separated)",
+          "domain_main": "Main domain (e.g. example.de)",
+          "domain_1": "Subdomain 1",
+          "domain_2": "Subdomain 2",
+          "domain_3": "Subdomain 3",
+          "domain_4": "Subdomain 4",
+          "domain_5": "Subdomain 5",
+          "domain_6": "Subdomain 6",
+          "domain_7": "Subdomain 7",
+          "domain_8": "Subdomain 8",
+          "domain_9": "Subdomain 9",
+          "domain_10": "Subdomain 10",
           "update_interval": "Check interval (seconds, min. 30)"
         }
       }

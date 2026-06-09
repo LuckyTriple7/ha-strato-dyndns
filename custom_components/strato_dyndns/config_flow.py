@@ -12,15 +12,25 @@ from .const import (
     CONF_UPDATE_INTERVAL,
     DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
+    DOMAIN_FIELDS,
 )
 
+# Ordered list of all domain input field keys
+# domain_main = Hauptdomain (optional), domain_1..10 = Subdomains (optional)
 
-def _parse_domains(raw: str) -> list[str]:
-    return [d.strip().lower() for d in raw.split(",") if d.strip()]
+
+def _fields_to_domains(data: dict) -> list[str]:
+    return [v for f in DOMAIN_FIELDS if (v := data.get(f, "").strip().lower())]
 
 
-def _domains_to_str(domains: list[str]) -> str:
-    return ", ".join(domains)
+def _domains_to_fields(domains: list[str]) -> dict[str, str]:
+    return {f: domains[i] if i < len(domains) else "" for i, f in enumerate(DOMAIN_FIELDS)}
+
+
+def _domain_schema(defaults: dict[str, str]) -> vol.Schema:
+    return vol.Schema(
+        {vol.Optional(f, default=defaults.get(f, "")): str for f in DOMAIN_FIELDS}
+    )
 
 
 class StratoDynDNSConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -49,12 +59,13 @@ class StratoDynDNSConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            domains = _parse_domains(user_input[CONF_DOMAINS])
+            domains = _fields_to_domains(user_input)
+            interval = user_input[CONF_UPDATE_INTERVAL]
             if not domains:
-                errors[CONF_DOMAINS] = "no_domains"
+                errors["base"] = "no_domains"
             else:
                 self._data[CONF_DOMAINS] = domains
-                self._data[CONF_UPDATE_INTERVAL] = user_input[CONF_UPDATE_INTERVAL]
+                self._data[CONF_UPDATE_INTERVAL] = interval
 
                 unique_id = self._data[CONF_ACCOUNT_NAME].lower().replace(" ", "_")
                 await self.async_set_unique_id(unique_id)
@@ -65,9 +76,9 @@ class StratoDynDNSConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data=self._data,
                 )
 
-        schema = vol.Schema(
+        schema = _domain_schema({})
+        schema = schema.extend(
             {
-                vol.Required(CONF_DOMAINS): str,
                 vol.Required(
                     CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL
                 ): vol.All(int, vol.Range(min=30, max=3600)),
@@ -88,9 +99,9 @@ class StratoDynDNSOptionsFlow(config_entries.OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            domains = _parse_domains(user_input[CONF_DOMAINS])
+            domains = _fields_to_domains(user_input)
             if not domains:
-                errors[CONF_DOMAINS] = "no_domains"
+                errors["base"] = "no_domains"
             else:
                 return self.async_create_entry(
                     title="",
@@ -104,16 +115,12 @@ class StratoDynDNSOptionsFlow(config_entries.OptionsFlow):
         current_domains = effective.get(CONF_DOMAINS, [])
         current_interval = effective.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
 
-        schema = vol.Schema(
+        schema = _domain_schema(_domains_to_fields(current_domains))
+        schema = schema.extend(
             {
-                vol.Required(
-                    CONF_DOMAINS, default=_domains_to_str(current_domains)
-                ): str,
                 vol.Required(
                     CONF_UPDATE_INTERVAL, default=current_interval
                 ): vol.All(int, vol.Range(min=30, max=3600)),
             }
         )
-        return self.async_show_form(
-            step_id="init", data_schema=schema, errors=errors
-        )
+        return self.async_show_form(step_id="init", data_schema=schema, errors=errors)

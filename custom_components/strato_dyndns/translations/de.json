@@ -12,9 +12,19 @@
       },
       "domains": {
         "title": "Domains",
-        "description": "Alle Domains und Subdomains kommagetrennt eingeben. Beispiel: home.example.de, vpn.example.de",
+        "description": "Domains eingeben die verwaltet werden sollen. Mindestens ein Feld muss ausgefüllt sein.",
         "data": {
-          "domains": "Domains (kommagetrennt)",
+          "domain_main": "Hauptdomain (z.B. example.de)",
+          "domain_1": "Subdomain 1",
+          "domain_2": "Subdomain 2",
+          "domain_3": "Subdomain 3",
+          "domain_4": "Subdomain 4",
+          "domain_5": "Subdomain 5",
+          "domain_6": "Subdomain 6",
+          "domain_7": "Subdomain 7",
+          "domain_8": "Subdomain 8",
+          "domain_9": "Subdomain 9",
+          "domain_10": "Subdomain 10",
           "update_interval": "Prüfintervall (Sekunden, min. 30)"
         }
       }
@@ -32,7 +42,17 @@
         "title": "Optionen",
         "description": "Verwaltete Domains oder das Prüfintervall anpassen.",
         "data": {
-          "domains": "Domains (kommagetrennt)",
+          "domain_main": "Hauptdomain (z.B. example.de)",
+          "domain_1": "Subdomain 1",
+          "domain_2": "Subdomain 2",
+          "domain_3": "Subdomain 3",
+          "domain_4": "Subdomain 4",
+          "domain_5": "Subdomain 5",
+          "domain_6": "Subdomain 6",
+          "domain_7": "Subdomain 7",
+          "domain_8": "Subdomain 8",
+          "domain_9": "Subdomain 9",
+          "domain_10": "Subdomain 10",
           "update_interval": "Prüfintervall (Sekunden, min. 30)"
         }
       }
