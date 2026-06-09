@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.6] - 2026-06-09
+### Fixed
+- Account error sensor now aggregates ALL per-domain problem sensors: `ON` when any domain has an update error, IPv4 mismatch, or IPv6 mismatch
+- Attribute renamed from `failed_domains`/`error_details` to `problem_domains`/`details` with full reason list per domain
+
 ## [0.1.5] - 2026-06-09
 ### Fixed
 - Minimum interval label corrected from "min. 30" to "min. 10" in all translation files
