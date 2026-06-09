@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import socket
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import aiohttp
@@ -58,6 +58,7 @@ class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.password = password
         self.domains = domains
         self._last_ip: str | None = None
+        self._last_update_times: dict[str, datetime] = {}
         self._session: aiohttp.ClientSession | None = None
 
     @property
@@ -88,12 +89,15 @@ class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
             if ip_changed:
                 update_status, update_response = await self._update_domain(domain, public_ip)
+                if update_status == "ok":
+                    self._last_update_times[domain] = datetime.now(timezone.utc)
 
             domain_data[domain] = {
                 "resolved_ip": resolved_ip,
                 "ip_mismatch": resolved_ip != public_ip if resolved_ip else True,
                 "update_status": update_status,
                 "update_response": update_response,
+                "last_update_time": self._last_update_times.get(domain),
             }
 
         self._last_ip = public_ip
@@ -108,12 +112,21 @@ class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     STRATO_UPDATE_URL, auth=auth, params=params
                 ) as resp:
                     text = (await resp.text()).strip()
-            status = "ok" if text.startswith(STRATO_OK_CODES) else "error"
-            _LOGGER.debug("[%s] %s → %s (%s)", self.account_name, domain, status, text)
+            code = text.split()[0] if text else ""
+            status = "ok" if code in STRATO_OK_CODES else "error"
+            if status == "ok":
+                _LOGGER.debug("[%s] %s → %s (%s)", self.account_name, domain, code, text)
+            else:
+                _LOGGER.warning("[%s] %s → Fehler: %s", self.account_name, domain, text)
             return status, text
         except Exception as exc:
             _LOGGER.warning("[%s] Update von %s fehlgeschlagen: %s", self.account_name, domain, exc)
             return "error", str(exc)
+
+    async def async_force_update(self) -> None:
+        """Force update all domains regardless of whether the IP changed."""
+        self._last_ip = None
+        await self.async_request_refresh()
 
     async def async_close(self) -> None:
         if self._session and not self._session.closed:

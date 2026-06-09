@@ -3,20 +3,20 @@ from __future__ import annotations
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
+from .config_flow import _fields_to_domains
 from .const import (
     CONF_ACCOUNT_NAME,
-    CONF_DOMAINS,
     CONF_UPDATE_INTERVAL,
     DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
+    DOMAIN_FIELDS,
 )
 from .coordinator import StratoDynDNSCoordinator
 
-PLATFORMS = ["sensor", "binary_sensor"]
+PLATFORMS = ["sensor", "binary_sensor", "button"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    # Options override data for mutable fields (domains, interval)
     effective = {**entry.data, **entry.options}
 
     coordinator = StratoDynDNSCoordinator(
@@ -24,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         account_name=effective[CONF_ACCOUNT_NAME],
         username=effective["username"],
         password=effective["password"],
-        domains=effective[CONF_DOMAINS],
+        domains=_fields_to_domains(effective),
         update_interval=effective.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL),
     )
     await coordinator.async_config_entry_first_refresh()

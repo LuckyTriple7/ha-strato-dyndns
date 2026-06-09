@@ -8,23 +8,15 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_ACCOUNT_NAME,
-    CONF_DOMAINS,
     CONF_UPDATE_INTERVAL,
     DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
     DOMAIN_FIELDS,
 )
 
-# Ordered list of all domain input field keys
-# domain_main = Hauptdomain (optional), domain_1..10 = Subdomains (optional)
-
 
 def _fields_to_domains(data: dict) -> list[str]:
     return [v for f in DOMAIN_FIELDS if (v := data.get(f, "").strip().lower())]
-
-
-def _domains_to_fields(domains: list[str]) -> dict[str, str]:
-    return {f: domains[i] if i < len(domains) else "" for i, f in enumerate(DOMAIN_FIELDS)}
 
 
 def _domain_schema(defaults: dict[str, str]) -> vol.Schema:
@@ -34,7 +26,7 @@ def _domain_schema(defaults: dict[str, str]) -> vol.Schema:
 
 
 class StratoDynDNSConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         self._data: dict = {}
@@ -46,26 +38,30 @@ class StratoDynDNSConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._data.update(user_input)
             return await self.async_step_domains()
 
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_ACCOUNT_NAME): str,
-                vol.Required("username"): str,
-                vol.Required("password"): str,
-            }
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_ACCOUNT_NAME): str,
+                    vol.Required("username"): str,
+                    vol.Required("password"): str,
+                }
+            ),
+            errors=errors,
         )
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_domains(self, user_input=None) -> FlowResult:
         errors: dict[str, str] = {}
 
         if user_input is not None:
             domains = _fields_to_domains(user_input)
-            interval = user_input[CONF_UPDATE_INTERVAL]
             if not domains:
                 errors["base"] = "no_domains"
             else:
-                self._data[CONF_DOMAINS] = domains
-                self._data[CONF_UPDATE_INTERVAL] = interval
+                # Store each field position directly — preserves which slot was used
+                for field in DOMAIN_FIELDS:
+                    self._data[field] = user_input.get(field, "").strip().lower()
+                self._data[CONF_UPDATE_INTERVAL] = user_input[CONF_UPDATE_INTERVAL]
 
                 unique_id = self._data[CONF_ACCOUNT_NAME].lower().replace(" ", "_")
                 await self.async_set_unique_id(unique_id)
@@ -76,8 +72,7 @@ class StratoDynDNSConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data=self._data,
                 )
 
-        schema = _domain_schema({})
-        schema = schema.extend(
+        schema = _domain_schema({}).extend(
             {
                 vol.Required(
                     CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL
@@ -106,17 +101,17 @@ class StratoDynDNSOptionsFlow(config_entries.OptionsFlow):
                 return self.async_create_entry(
                     title="",
                     data={
-                        CONF_DOMAINS: domains,
+                        **{f: user_input.get(f, "").strip().lower() for f in DOMAIN_FIELDS},
                         CONF_UPDATE_INTERVAL: user_input[CONF_UPDATE_INTERVAL],
                     },
                 )
 
         effective = {**self.config_entry.data, **self.config_entry.options}
-        current_domains = effective.get(CONF_DOMAINS, [])
+        # Read field positions directly from stored data
+        defaults = {f: effective.get(f, "") for f in DOMAIN_FIELDS}
         current_interval = effective.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
 
-        schema = _domain_schema(_domains_to_fields(current_domains))
-        schema = schema.extend(
+        schema = _domain_schema(defaults).extend(
             {
                 vol.Required(
                     CONF_UPDATE_INTERVAL, default=current_interval
