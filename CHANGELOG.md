@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.0] - 2026-06-09
+### Changed
+- Minimum polling interval lowered from 30 to 10 seconds
+- Safe because Strato is only called when DNS-resolved IP ≠ public IP, not on every poll
+
 ## [0.0.9] - 2026-06-09
 ### Changed
 - Replaced account status text sensor (`ok`/`error`) with a binary problem sensor

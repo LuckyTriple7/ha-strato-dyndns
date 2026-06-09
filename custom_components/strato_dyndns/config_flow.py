@@ -76,7 +76,7 @@ class StratoDynDNSConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(
                     CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL
-                ): vol.All(int, vol.Range(min=30, max=3600)),
+                ): vol.All(int, vol.Range(min=10, max=3600)),
             }
         )
         return self.async_show_form(
@@ -115,7 +115,7 @@ class StratoDynDNSOptionsFlow(config_entries.OptionsFlow):
             {
                 vol.Required(
                     CONF_UPDATE_INTERVAL, default=current_interval
-                ): vol.All(int, vol.Range(min=30, max=3600)),
+                ): vol.All(int, vol.Range(min=10, max=3600)),
             }
         )
         return self.async_show_form(step_id="init", data_schema=schema, errors=errors)
