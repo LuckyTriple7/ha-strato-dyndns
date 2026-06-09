@@ -43,7 +43,7 @@ class StratoPublicIPSensor(CoordinatorEntity[StratoDynDNSCoordinator], SensorEnt
     def __init__(self, coordinator: StratoDynDNSCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry.entry_id}_public_ip"
-        self._attr_name = f"Strato {coordinator.account_name} Public IP"
+        self._attr_name = f"{coordinator.account_name} Public IP"
         self._attr_device_info = _device_info(coordinator)
 
     @property
@@ -65,7 +65,7 @@ class StratoDomainResolvedIPSensor(CoordinatorEntity[StratoDynDNSCoordinator], S
         super().__init__(coordinator)
         slug = domain.replace(".", "_").replace("-", "_")
         self._attr_unique_id = f"{entry.entry_id}_{slug}_resolved_ip"
-        self._attr_name = f"Strato {domain} Resolved IP"
+        self._attr_name = f"{coordinator.account_name} Domain {domain} Resolved IP"
         self._attr_device_info = _device_info(coordinator)
         self._domain = domain
 
@@ -107,7 +107,7 @@ class StratoDomainLastUpdateSensor(CoordinatorEntity[StratoDynDNSCoordinator], S
         super().__init__(coordinator)
         slug = domain.replace(".", "_").replace("-", "_")
         self._attr_unique_id = f"{entry.entry_id}_{slug}_last_update"
-        self._attr_name = f"Strato {domain} Last Update"
+        self._attr_name = f"{coordinator.account_name} Domain {domain} Last Update"
         self._attr_device_info = _device_info(coordinator)
         self._domain = domain
 

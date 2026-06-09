@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.1] - 2026-06-09
+### Changed
+- Entity naming cleaned up (breaking change — delete and re-add the integration)
+- Removed redundant "Strato" prefix from all entity names
+- Domain sensors now include account name and "Domain" separator for clarity
+- Examples: `server_de_domain_bookstack_server_de_resolved_ip`, `server_de_error`
+
 ## [0.1.0] - 2026-06-09
 ### Changed
 - Minimum polling interval lowered from 30 to 10 seconds

@@ -35,7 +35,7 @@ class StratoAccountErrorSensor(CoordinatorEntity[StratoDynDNSCoordinator], Binar
     def __init__(self, coordinator: StratoDynDNSCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry.entry_id}_account_error"
-        self._attr_name = f"Strato {coordinator.account_name} Error"
+        self._attr_name = f"{coordinator.account_name} Error"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.account_name)},
             name=f"Strato DynDNS · {coordinator.account_name}",
@@ -77,7 +77,7 @@ class StratoDomainMismatchSensor(CoordinatorEntity[StratoDynDNSCoordinator], Bin
         super().__init__(coordinator)
         slug = domain.replace(".", "_").replace("-", "_")
         self._attr_unique_id = f"{entry.entry_id}_{slug}_mismatch"
-        self._attr_name = f"Strato {domain} IP Mismatch"
+        self._attr_name = f"{coordinator.account_name} Domain {domain} IP Mismatch"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.account_name)},
             name=f"Strato DynDNS · {coordinator.account_name}",
