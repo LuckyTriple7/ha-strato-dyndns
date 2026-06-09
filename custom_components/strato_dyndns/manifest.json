@@ -1,10 +1,10 @@
 {
   "domain": "strato_dyndns",
   "name": "Strato DynDNS",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "config_flow": true,
   "documentation": "",
-  "requirements": [],
+  "requirements": ["dnspython==2.7.0"],
   "codeowners": [],
   "iot_class": "cloud_polling",
   "dependencies": []

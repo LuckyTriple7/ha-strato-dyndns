@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import socket
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import aiohttp
 import async_timeout
+import dns.resolver
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -29,12 +29,22 @@ async def async_get_public_ip(session: aiohttp.ClientSession) -> str | None:
     return None
 
 
-async def async_resolve_ip(domain: str) -> str | None:
+_DNS_RESOLVER = dns.resolver.Resolver(configure=False)
+_DNS_RESOLVER.nameservers = ["1.1.1.1", "8.8.8.8"]
+_DNS_RESOLVER.lifetime = 5.0
+
+
+def _resolve_sync(domain: str) -> str | None:
     try:
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, socket.gethostbyname, domain)
+        answer = _DNS_RESOLVER.resolve(domain, "A")
+        return str(answer[0])
     except Exception:
         return None
+
+
+async def async_resolve_ip(domain: str) -> str | None:
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, _resolve_sync, domain)
 
 
 class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
