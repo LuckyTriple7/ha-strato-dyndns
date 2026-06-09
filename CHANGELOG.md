@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.8] - 2026-06-09
+### Fixed
+- Kein unnötiger Strato-Update mehr beim HA-Neustart
+  - Nach Neustart ist der In-Memory-Zustand leer → DNS-Check entscheidet (wie bisher, sicher)
+  - Innerhalb einer laufenden Session → gesendete IP entscheidet (verhindert Re-Send während DNS-Propagierung)
+
 ## [0.1.7] - 2026-06-09
 ### Changed
 - Domain processing is now parallel: DNS resolution and Strato API calls for all domains run concurrently (`asyncio.gather`)
