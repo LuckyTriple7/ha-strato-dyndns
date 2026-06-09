@@ -193,14 +193,25 @@ class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             and (resolved_ip6 is None or resolved_ip6 != public_ip6)
         )
 
-        # Trigger update only when public IP changed since last successful send.
-        # This avoids re-sending to Strato while DNS is still propagating after an update.
-        ip4_needs_send = public_ip != self._last_sent_ip4.get(domain)
-        ip6_needs_send = (
-            self.ipv6_enabled
-            and public_ip6 is not None
-            and public_ip6 != self._last_sent_ip6.get(domain)
-        )
+        # Trigger logic:
+        # - No prior state (HA restart / first run): use DNS check to avoid sending when IP unchanged.
+        # - Prior state exists (same session): compare against last sent IP to avoid re-sending
+        #   while DNS is still propagating after a successful update.
+        last_sent_ip4 = self._last_sent_ip4.get(domain)
+        if last_sent_ip4 is None:
+            ip4_needs_send = ipv4_mismatch
+        else:
+            ip4_needs_send = public_ip != last_sent_ip4
+
+        last_sent_ip6 = self._last_sent_ip6.get(domain)
+        if last_sent_ip6 is None:
+            ip6_needs_send = self.ipv6_enabled and public_ip6 is not None and ipv6_mismatch
+        else:
+            ip6_needs_send = (
+                self.ipv6_enabled
+                and public_ip6 is not None
+                and public_ip6 != last_sent_ip6
+            )
         needs_update = force or ip4_needs_send or ip6_needs_send
 
         backoff_until = self._error_backoff.get(domain)
