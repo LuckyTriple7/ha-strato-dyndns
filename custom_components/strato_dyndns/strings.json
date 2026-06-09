@@ -11,7 +11,7 @@
         }
       },
       "domains": {
-        "title": "Domains",
+        "title": "Domains & Settings",
         "description": "Enter the domains to manage. At least one field must be filled.",
         "data": {
           "domain_main": "Main domain (e.g. example.de)",
@@ -25,7 +25,9 @@
           "domain_8": "Subdomain 8",
           "domain_9": "Subdomain 9",
           "domain_10": "Subdomain 10",
-          "update_interval": "Check interval (seconds, min. 30)"
+          "update_interval": "Check interval (seconds, min. 10)",
+          "ipv6_enabled": "Enable IPv6",
+          "notifications_enabled": "Enable persistent notifications"
         }
       }
     },
@@ -40,7 +42,7 @@
     "step": {
       "init": {
         "title": "Options",
-        "description": "Update the managed domains or the check interval.",
+        "description": "Update the managed domains or settings.",
         "data": {
           "domain_main": "Main domain (e.g. example.de)",
           "domain_1": "Subdomain 1",
@@ -53,7 +55,9 @@
           "domain_8": "Subdomain 8",
           "domain_9": "Subdomain 9",
           "domain_10": "Subdomain 10",
-          "update_interval": "Check interval (seconds, min. 30)"
+          "update_interval": "Check interval (seconds, min. 10)",
+          "ipv6_enabled": "Enable IPv6",
+          "notifications_enabled": "Enable persistent notifications"
         }
       }
     },

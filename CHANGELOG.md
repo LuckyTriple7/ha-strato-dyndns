@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.5] - 2026-06-09
+### Fixed
+- Minimum interval label corrected from "min. 30" to "min. 10" in all translation files
+- Toggle labels `ipv6_enabled` and `notifications_enabled` now show translated names in config/options UI
+
 ## [0.1.4] - 2026-06-09
 ### Added
 - Persistent notifications for problem sensors (can be disabled per account in options)

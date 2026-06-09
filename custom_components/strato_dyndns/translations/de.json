@@ -11,7 +11,7 @@
         }
       },
       "domains": {
-        "title": "Domains",
+        "title": "Domains & Einstellungen",
         "description": "Domains eingeben die verwaltet werden sollen. Mindestens ein Feld muss ausgefüllt sein.",
         "data": {
           "domain_main": "Hauptdomain (z.B. example.de)",
@@ -25,7 +25,9 @@
           "domain_8": "Subdomain 8",
           "domain_9": "Subdomain 9",
           "domain_10": "Subdomain 10",
-          "update_interval": "Prüfintervall (Sekunden, min. 30)"
+          "update_interval": "Prüfintervall (Sekunden, min. 10)",
+          "ipv6_enabled": "IPv6 aktivieren",
+          "notifications_enabled": "Persistente Benachrichtigungen aktivieren"
         }
       }
     },
@@ -40,7 +42,7 @@
     "step": {
       "init": {
         "title": "Optionen",
-        "description": "Verwaltete Domains oder das Prüfintervall anpassen.",
+        "description": "Verwaltete Domains oder Einstellungen anpassen.",
         "data": {
           "domain_main": "Hauptdomain (z.B. example.de)",
           "domain_1": "Subdomain 1",
@@ -53,7 +55,9 @@
           "domain_8": "Subdomain 8",
           "domain_9": "Subdomain 9",
           "domain_10": "Subdomain 10",
-          "update_interval": "Prüfintervall (Sekunden, min. 30)"
+          "update_interval": "Prüfintervall (Sekunden, min. 10)",
+          "ipv6_enabled": "IPv6 aktivieren",
+          "notifications_enabled": "Persistente Benachrichtigungen aktivieren"
         }
       }
     },
