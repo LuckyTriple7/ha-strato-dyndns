@@ -59,6 +59,7 @@ class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.domains = domains
         self._last_ip: str | None = None
         self._last_update_times: dict[str, datetime] = {}
+        self._force_update: bool = False
         self._session: aiohttp.ClientSession | None = None
 
     @property
@@ -70,26 +71,36 @@ class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         public_ip = await async_get_public_ip(self._http)
         if not public_ip:
-            raise UpdateFailed("Öffentliche IP konnte nicht ermittelt werden")
+            raise UpdateFailed("Could not determine public IP address")
 
-        ip_changed = public_ip != self._last_ip
-        if ip_changed:
-            _LOGGER.info("[%s] IP geändert: %s → %s", self.account_name, self._last_ip, public_ip)
+        if public_ip != self._last_ip and self._last_ip is not None:
+            _LOGGER.info("[%s] Public IP changed: %s -> %s", self.account_name, self._last_ip, public_ip)
         else:
-            _LOGGER.debug("[%s] IP unverändert (%s) — kein Update nötig", self.account_name, public_ip)
+            _LOGGER.debug("[%s] Public IP: %s", self.account_name, public_ip)
+
+        force = self._force_update
+        self._force_update = False
 
         domain_data: dict[str, Any] = {}
         for domain in self.domains:
             resolved_ip = await async_resolve_ip(domain)
-            _LOGGER.debug("[%s] DNS-Auflösung %s → %s", self.account_name, domain, resolved_ip)
+            _LOGGER.debug("[%s] DNS resolved %s -> %s", self.account_name, domain, resolved_ip)
+
             update_status: str | None = None
             update_response: str | None = None
 
-            if ip_changed:
-                _LOGGER.debug("[%s] Starte Update für %s mit IP %s", self.account_name, domain, public_ip)
+            needs_update = force or resolved_ip is None or resolved_ip != public_ip
+            if needs_update:
+                reason = "forced" if force else f"DNS={resolved_ip}"
+                _LOGGER.debug(
+                    "[%s] Updating %s (public=%s, %s)",
+                    self.account_name, domain, public_ip, reason,
+                )
                 update_status, update_response = await self._update_domain(domain, public_ip)
                 if update_status == "ok":
                     self._last_update_times[domain] = datetime.now(timezone.utc)
+            else:
+                _LOGGER.debug("[%s] %s DNS up to date (%s) — skipping", self.account_name, domain, resolved_ip)
 
             domain_data[domain] = {
                 "resolved_ip": resolved_ip,
@@ -114,24 +125,24 @@ class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             code = text.split()[0] if text else ""
             status = "ok" if code in STRATO_OK_CODES else "error"
             if status == "ok":
-                _LOGGER.debug("[%s] %s Update OK: %s", self.account_name, domain, text)
+                _LOGGER.debug("[%s] %s update OK: %s", self.account_name, domain, text)
             else:
                 _LOGGER.error(
-                    "[%s] DynDNS Update fehlgeschlagen für %s: %s",
+                    "[%s] DynDNS update failed for %s: %s",
                     self.account_name, domain, text,
                 )
             return status, text
         except Exception as exc:
             _LOGGER.error(
-                "[%s] DynDNS Update fehlgeschlagen für %s: %s",
+                "[%s] DynDNS update failed for %s: %s",
                 self.account_name, domain, exc,
             )
             return "error", str(exc)
 
     async def async_force_update(self) -> None:
-        """Force update all domains regardless of whether the IP changed."""
-        _LOGGER.debug("[%s] Manuelles Update angefordert", self.account_name)
-        self._last_ip = None
+        """Force update all domains regardless of current DNS state."""
+        _LOGGER.debug("[%s] Manual update requested", self.account_name)
+        self._force_update = True
         await self.async_request_refresh()
 
     async def async_close(self) -> None:
