@@ -44,9 +44,9 @@ Per configured account:
 | Entity | Type | Description |
 |--------|------|-------------|
 | `sensor.<account>_public_ip` | Sensor | Currently detected public IP |
-| `sensor.<account>_status` | Sensor | `ok` or `error`, with failed domains as attribute |
 | `sensor.<domain>_resolved_ip` | Sensor | DNS-resolved IP of the domain |
 | `sensor.<domain>_last_update` | Sensor | Timestamp of last successful update |
+| `binary_sensor.<account>_error` | Problem sensor | `on` when any domain's last update failed (abuse, badauth, …) — attributes: `failed_domains`, `error_details` |
 | `binary_sensor.<domain>_ip_mismatch` | Problem sensor | `on` when DNS IP ≠ public IP |
 | `button.<account>_update_now` | Button | Force immediate update of all domains |
 

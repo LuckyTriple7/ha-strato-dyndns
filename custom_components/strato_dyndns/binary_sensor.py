@@ -20,9 +20,48 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     coordinator: StratoDynDNSCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        [StratoDomainMismatchSensor(coordinator, entry, domain) for domain in coordinator.domains]
-    )
+    entities: list[BinarySensorEntity] = [StratoAccountErrorSensor(coordinator, entry)]
+    for domain in coordinator.domains:
+        entities.append(StratoDomainMismatchSensor(coordinator, entry, domain))
+    async_add_entities(entities)
+
+
+class StratoAccountErrorSensor(CoordinatorEntity[StratoDynDNSCoordinator], BinarySensorEntity):
+    """ON when any domain's last update attempt returned an error."""
+
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_icon = "mdi:cloud-alert"
+
+    def __init__(self, coordinator: StratoDynDNSCoordinator, entry: ConfigEntry) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{entry.entry_id}_account_error"
+        self._attr_name = f"Strato {coordinator.account_name} Error"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.account_name)},
+            name=f"Strato DynDNS · {coordinator.account_name}",
+            manufacturer="Strato AG",
+            model="DynDNS",
+        )
+
+    @property
+    def is_on(self) -> bool | None:
+        if not self.coordinator.data:
+            return None
+        return any(
+            v.get("update_status") == "error"
+            for v in self.coordinator.data["domains"].values()
+        )
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        if not self.coordinator.data:
+            return {}
+        failed = {
+            domain: v.get("update_response")
+            for domain, v in self.coordinator.data["domains"].items()
+            if v.get("update_status") == "error"
+        }
+        return {"failed_domains": list(failed.keys()), "error_details": failed}
 
 
 class StratoDomainMismatchSensor(CoordinatorEntity[StratoDynDNSCoordinator], BinarySensorEntity):

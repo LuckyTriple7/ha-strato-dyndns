@@ -21,7 +21,6 @@ async def async_setup_entry(
     coordinator: StratoDynDNSCoordinator = hass.data[DOMAIN][entry.entry_id]
     entities: list[SensorEntity] = [
         StratoPublicIPSensor(coordinator, entry),
-        StratoAccountStatusSensor(coordinator, entry),
     ]
     for domain in coordinator.domains:
         entities.append(StratoDomainResolvedIPSensor(coordinator, entry, domain))
@@ -52,43 +51,6 @@ class StratoPublicIPSensor(CoordinatorEntity[StratoDynDNSCoordinator], SensorEnt
         if not self.coordinator.data:
             return None
         return self.coordinator.data.get("public_ip")
-
-
-class StratoAccountStatusSensor(CoordinatorEntity[StratoDynDNSCoordinator], SensorEntity):
-    """Single sensor per account — 'ok' or 'error', with failing domains as attribute."""
-
-    _attr_icon = "mdi:check-network"
-
-    def __init__(self, coordinator: StratoDynDNSCoordinator, entry: ConfigEntry) -> None:
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{entry.entry_id}_status"
-        self._attr_name = f"Strato {coordinator.account_name} Status"
-        self._attr_device_info = _device_info(coordinator)
-
-    @property
-    def native_value(self) -> str:
-        if not self.coordinator.data:
-            return "unknown"
-        failed = [
-            d for d, v in self.coordinator.data["domains"].items()
-            if v.get("update_status") == "error"
-        ]
-        return "error" if failed else "ok"
-
-    @property
-    def extra_state_attributes(self) -> dict:
-        if not self.coordinator.data:
-            return {}
-        domains = self.coordinator.data["domains"]
-        failed = {
-            d: v.get("update_response")
-            for d, v in domains.items()
-            if v.get("update_status") == "error"
-        }
-        attrs: dict = {"failed_domains": list(failed.keys())}
-        if failed:
-            attrs["error_details"] = failed
-        return attrs
 
 
 class StratoDomainResolvedIPSensor(CoordinatorEntity[StratoDynDNSCoordinator], SensorEntity):
