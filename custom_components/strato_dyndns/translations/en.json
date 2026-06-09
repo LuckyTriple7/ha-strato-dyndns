@@ -15,7 +15,7 @@
         "description": "Enter all domains and subdomains to be managed (comma-separated). Example: home.example.de, vpn.example.de",
         "data": {
           "domains": "Domains (comma-separated)",
-          "update_interval": "Check interval (minutes)"
+          "update_interval": "Check interval (seconds, min. 30)"
         }
       }
     },
@@ -33,7 +33,7 @@
         "description": "Update the managed domains or the check interval.",
         "data": {
           "domains": "Domains (comma-separated)",
-          "update_interval": "Check interval (minutes)"
+          "update_interval": "Check interval (seconds, min. 30)"
         }
       }
     },

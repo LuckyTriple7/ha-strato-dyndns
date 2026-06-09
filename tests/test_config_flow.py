@@ -51,13 +51,13 @@ class TestConfigFlow:
             result["flow_id"],
             {
                 CONF_DOMAINS: "home.example.de, vpn.example.de",
-                CONF_UPDATE_INTERVAL: 10,
+                CONF_UPDATE_INTERVAL: 60,
             },
         )
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == "TestAccount"
         assert result["data"][CONF_DOMAINS] == ["home.example.de", "vpn.example.de"]
-        assert result["data"][CONF_UPDATE_INTERVAL] == 10
+        assert result["data"][CONF_UPDATE_INTERVAL] == 60
 
     async def test_empty_domains_shows_error(self, hass):
         result = await hass.config_entries.flow.async_init(
@@ -73,7 +73,7 @@ class TestConfigFlow:
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_DOMAINS: "   ,  , ", CONF_UPDATE_INTERVAL: 5},
+            {CONF_DOMAINS: "   ,  , ", CONF_UPDATE_INTERVAL: 30},
         )
         assert result["type"] == FlowResultType.FORM
         assert "no_domains" in result["errors"].values()
@@ -89,7 +89,7 @@ class TestConfigFlow:
         )
         await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_DOMAINS: "home.example.de", CONF_UPDATE_INTERVAL: 5},
+            {CONF_DOMAINS: "home.example.de", CONF_UPDATE_INTERVAL: 30},
         )
 
         # Second entry with same account name
@@ -102,7 +102,7 @@ class TestConfigFlow:
         )
         result2 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
-            {CONF_DOMAINS: "other.example.de", CONF_UPDATE_INTERVAL: 5},
+            {CONF_DOMAINS: "other.example.de", CONF_UPDATE_INTERVAL: 30},
         )
         assert result2["type"] == FlowResultType.ABORT
         assert result2["reason"] == "already_configured"

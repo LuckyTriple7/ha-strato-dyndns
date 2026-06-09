@@ -51,7 +51,7 @@ class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass,
             _LOGGER,
             name=f"{DOMAIN}_{account_name}",
-            update_interval=timedelta(minutes=update_interval),
+            update_interval=timedelta(seconds=update_interval),
         )
         self.account_name = account_name
         self.username = username

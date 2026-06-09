@@ -70,7 +70,7 @@ class StratoDynDNSConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_DOMAINS): str,
                 vol.Required(
                     CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL
-                ): vol.All(int, vol.Range(min=1, max=60)),
+                ): vol.All(int, vol.Range(min=30, max=3600)),
             }
         )
         return self.async_show_form(
@@ -80,13 +80,10 @@ class StratoDynDNSConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: config_entries.ConfigEntry):
-        return StratoDynDNSOptionsFlow(config_entry)
+        return StratoDynDNSOptionsFlow()
 
 
 class StratoDynDNSOptionsFlow(config_entries.OptionsFlow):
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        self.config_entry = config_entry
-
     async def async_step_init(self, user_input=None) -> FlowResult:
         errors: dict[str, str] = {}
 
@@ -103,7 +100,6 @@ class StratoDynDNSOptionsFlow(config_entries.OptionsFlow):
                     },
                 )
 
-        # Options override data for editable fields
         effective = {**self.config_entry.data, **self.config_entry.options}
         current_domains = effective.get(CONF_DOMAINS, [])
         current_interval = effective.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
@@ -115,7 +111,7 @@ class StratoDynDNSOptionsFlow(config_entries.OptionsFlow):
                 ): str,
                 vol.Required(
                     CONF_UPDATE_INTERVAL, default=current_interval
-                ): vol.All(int, vol.Range(min=1, max=60)),
+                ): vol.All(int, vol.Range(min=30, max=3600)),
             }
         )
         return self.async_show_form(

@@ -15,7 +15,7 @@
         "description": "Alle Domains und Subdomains kommagetrennt eingeben. Beispiel: home.example.de, vpn.example.de",
         "data": {
           "domains": "Domains (kommagetrennt)",
-          "update_interval": "Prüfintervall (Minuten)"
+          "update_interval": "Prüfintervall (Sekunden, min. 30)"
         }
       }
     },
@@ -33,7 +33,7 @@
         "description": "Verwaltete Domains oder das Prüfintervall anpassen.",
         "data": {
           "domains": "Domains (kommagetrennt)",
-          "update_interval": "Prüfintervall (Minuten)"
+          "update_interval": "Prüfintervall (Sekunden, min. 30)"
         }
       }
     },
