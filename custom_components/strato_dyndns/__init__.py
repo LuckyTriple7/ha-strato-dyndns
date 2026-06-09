@@ -7,6 +7,7 @@ from .config_flow import _fields_to_domains
 from .const import (
     CONF_ACCOUNT_NAME,
     CONF_IPV6_ENABLED,
+    CONF_NOTIFICATIONS_ENABLED,
     CONF_UPDATE_INTERVAL,
     DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
@@ -27,6 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         domains=_fields_to_domains(effective),
         update_interval=effective.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL),
         ipv6_enabled=effective.get(CONF_IPV6_ENABLED, False),
+        notifications_enabled=effective.get(CONF_NOTIFICATIONS_ENABLED, True),
     )
     await coordinator.async_config_entry_first_refresh()
 

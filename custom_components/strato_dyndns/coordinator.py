@@ -12,6 +12,8 @@ import dns.resolver
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from homeassistant.components import persistent_notification
+
 from .const import DOMAIN, IP_PROVIDERS, IPv6_PROVIDERS, STRATO_OK_CODES, STRATO_UPDATE_URL
 
 _LOGGER = logging.getLogger(__name__)
@@ -95,6 +97,7 @@ class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         domains: list[str],
         update_interval: int,
         ipv6_enabled: bool = False,
+        notifications_enabled: bool = True,
     ) -> None:
         super().__init__(
             hass,
@@ -107,6 +110,9 @@ class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.password = password
         self.domains = domains
         self.ipv6_enabled = ipv6_enabled
+        self.notifications_enabled = notifications_enabled
+        self._account_slug = account_name.lower().replace(" ", "_").replace(".", "_").replace("-", "_")
+        self._active_notifications: set[str] = set()
         self._last_ip: str | None = None
         self._last_update_times: dict[str, datetime] = {}
         self._last_update_results: dict[str, tuple[str | None, str | None]] = {}
@@ -218,13 +224,15 @@ class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             }
 
         self._last_ip = public_ip
-        return {
+        result = {
             "public_ip": public_ip,
             "public_ip_provider": public_ip_provider,
             "public_ip6": public_ip6,
             "public_ip6_provider": public_ip6_provider,
             "domains": domain_data,
         }
+        await self._async_handle_notifications(domain_data, public_ip, public_ip6)
+        return result
 
     async def _update_domain(self, domain: str, ip: str, ip6: str | None = None) -> tuple[str, str]:
         try:
@@ -246,6 +254,96 @@ class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except Exception as exc:
             _LOGGER.error("[%s] DynDNS update failed for %s: %s", self.account_name, domain, exc)
             return "error", str(exc)
+
+    async def _async_handle_notifications(
+        self,
+        domain_data: dict[str, Any],
+        public_ip: str,
+        public_ip6: str | None,
+    ) -> None:
+        if not self.notifications_enabled:
+            # Dismiss any lingering notifications when feature is turned off
+            for notif_id in list(self._active_notifications):
+                persistent_notification.async_dismiss(self.hass, notif_id)
+            self._active_notifications.clear()
+            return
+
+        use_de = self.hass.config.language[:2].lower() == "de"
+        current_problems: set[str] = set()
+
+        # --- Account-level update errors ---
+        failed = {
+            d: v.get("update_response", "?")
+            for d, v in domain_data.items()
+            if v.get("update_status") == "error"
+        }
+        if failed:
+            notif_id = f"strato_dyndns_error_{self._account_slug}"
+            current_problems.add(notif_id)
+            if notif_id not in self._active_notifications:
+                details = "\n".join(f"• {d}: {r}" for d, r in failed.items())
+                if use_de:
+                    title = f"Strato DynDNS – Update-Fehler ({self.account_name})"
+                    message = f"DynDNS-Update fehlgeschlagen:\n{details}"
+                else:
+                    title = f"Strato DynDNS – Update Error ({self.account_name})"
+                    message = f"DynDNS update failed:\n{details}"
+                persistent_notification.async_create(self.hass, message, title, notif_id)
+                self._active_notifications.add(notif_id)
+
+        # --- IPv4 mismatch per domain ---
+        for domain, v in domain_data.items():
+            if v.get("ip_mismatch"):
+                slug = domain.replace(".", "_").replace("-", "_")
+                notif_id = f"strato_dyndns_mismatch_{self._account_slug}_{slug}"
+                current_problems.add(notif_id)
+                if notif_id not in self._active_notifications:
+                    if use_de:
+                        title = f"Strato DynDNS – IP-Abweichung ({self.account_name})"
+                        message = (
+                            f"Domain: {domain}\n"
+                            f"DNS zeigt:    {v.get('resolved_ip') or '—'}\n"
+                            f"Öffentlich:   {public_ip}"
+                        )
+                    else:
+                        title = f"Strato DynDNS – IP Mismatch ({self.account_name})"
+                        message = (
+                            f"Domain: {domain}\n"
+                            f"DNS resolves to: {v.get('resolved_ip') or '—'}\n"
+                            f"Public IP:       {public_ip}"
+                        )
+                    persistent_notification.async_create(self.hass, message, title, notif_id)
+                    self._active_notifications.add(notif_id)
+
+        # --- IPv6 mismatch per domain ---
+        if self.ipv6_enabled and public_ip6:
+            for domain, v in domain_data.items():
+                if v.get("ip6_mismatch"):
+                    slug = domain.replace(".", "_").replace("-", "_")
+                    notif_id = f"strato_dyndns_ipv6_mismatch_{self._account_slug}_{slug}"
+                    current_problems.add(notif_id)
+                    if notif_id not in self._active_notifications:
+                        if use_de:
+                            title = f"Strato DynDNS – IPv6-Abweichung ({self.account_name})"
+                            message = (
+                                f"Domain: {domain}\n"
+                                f"DNS zeigt (AAAA): {v.get('resolved_ip6') or '—'}\n"
+                                f"Öffentlich IPv6:  {public_ip6}"
+                            )
+                        else:
+                            title = f"Strato DynDNS – IPv6 Mismatch ({self.account_name})"
+                            message = (
+                                f"Domain: {domain}\n"
+                                f"DNS resolves to (AAAA): {v.get('resolved_ip6') or '—'}\n"
+                                f"Public IPv6:            {public_ip6}"
+                            )
+                        persistent_notification.async_create(self.hass, message, title, notif_id)
+                        self._active_notifications.add(notif_id)
+
+        # --- Dismiss resolved notifications ---
+        for notif_id in list(self._active_notifications - current_problems):
+            persistent_notification.async_dismiss(self.hass, notif_id)
+            self._active_notifications.discard(notif_id)
 
     async def async_force_update(self) -> None:
         """Force update all domains, bypassing backoff."""

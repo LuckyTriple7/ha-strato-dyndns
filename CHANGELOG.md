@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.4] - 2026-06-09
+### Added
+- Persistent notifications for problem sensors (can be disabled per account in options)
+  - Update error: one notification per account listing all failed domains with error codes
+  - IPv4 mismatch: one notification per domain showing DNS vs. public IP
+  - IPv6 mismatch: one notification per domain showing AAAA vs. public IPv6
+- Notifications are automatically dismissed when the problem is resolved
+- Language auto-detected from HA config (`de` → German, otherwise English)
+
 ## [0.1.3] - 2026-06-09
 ### Added
 - Optional IPv6 support (enable per account in config/options)
