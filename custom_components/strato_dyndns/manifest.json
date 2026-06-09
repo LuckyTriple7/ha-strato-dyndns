@@ -4,6 +4,7 @@
   "version": "0.1.9",
   "config_flow": true,
   "documentation": "https://github.com/LuckyTriple7/ha-strato-dyndns",
+  "issue_tracker": "https://github.com/LuckyTriple7/ha-strato-dyndns/issues",
   "requirements": ["dnspython==2.7.0"],
   "codeowners": [],
   "iot_class": "cloud_polling",
