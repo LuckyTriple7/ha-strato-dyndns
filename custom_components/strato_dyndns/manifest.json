@@ -1,7 +1,7 @@
 {
   "domain": "strato_dyndns",
   "name": "Strato DynDNS",
-  "version": "0.1.9",
+  "version": "0.2.0",
   "config_flow": true,
   "documentation": "https://github.com/LuckyTriple7/ha-strato-dyndns",
   "issue_tracker": "https://github.com/LuckyTriple7/ha-strato-dyndns/issues",

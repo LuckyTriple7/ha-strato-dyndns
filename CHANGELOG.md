@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0] - 2026-06-09
+### Fixed
+- manifest.json: `issue_tracker` und `codeowners` ergänzt (HACS-Pflichtfelder für Store-Aufnahme)
+
 ## [0.1.9] - 2026-06-09
 ### Changed
 - Globaler Problem-Sensor zeigt nur noch `ON`, wenn DNS-Resolver-IP von der öffentlichen IP abweicht (IPv4 oder IPv6)
