@@ -55,8 +55,7 @@ class StratoAccountErrorSensor(CoordinatorEntity[StratoDynDNSCoordinator], Binar
             return None
         ipv6 = self.coordinator.ipv6_enabled
         return any(
-            v.get("update_status") == "error"
-            or v.get("ip_mismatch") is True
+            v.get("ip_mismatch") is True
             or (ipv6 and v.get("ip6_mismatch") is True)
             for v in self.coordinator.data["domains"].values()
         )
@@ -69,8 +68,6 @@ class StratoAccountErrorSensor(CoordinatorEntity[StratoDynDNSCoordinator], Binar
         problems: dict[str, list[str]] = {}
         for domain, v in self.coordinator.data["domains"].items():
             reasons = []
-            if v.get("update_status") == "error":
-                reasons.append(f"update_error: {v.get('update_response', '?')}")
             if v.get("ip_mismatch") is True:
                 reasons.append(f"ipv4_mismatch: {v.get('resolved_ip')} != {self.coordinator.data.get('public_ip')}")
             if ipv6 and v.get("ip6_mismatch") is True:

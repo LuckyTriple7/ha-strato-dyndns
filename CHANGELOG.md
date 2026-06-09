@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.9] - 2026-06-09
+### Changed
+- Globaler Problem-Sensor zeigt nur noch `ON`, wenn DNS-Resolver-IP von der öffentlichen IP abweicht (IPv4 oder IPv6)
+- Update-Fehler einzelner Domains werden im globalen Sensor nicht mehr berücksichtigt — die Domain-Sensoren zeigen das weiterhin separat
+
 ## [0.1.8] - 2026-06-09
 ### Fixed
 - Kein unnötiger Strato-Update mehr beim HA-Neustart
