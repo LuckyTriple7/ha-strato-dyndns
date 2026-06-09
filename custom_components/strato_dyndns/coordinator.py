@@ -74,20 +74,19 @@ class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         ip_changed = public_ip != self._last_ip
         if ip_changed:
-            _LOGGER.info(
-                "[%s] IP geändert: %s → %s",
-                self.account_name,
-                self._last_ip,
-                public_ip,
-            )
+            _LOGGER.info("[%s] IP geändert: %s → %s", self.account_name, self._last_ip, public_ip)
+        else:
+            _LOGGER.debug("[%s] IP unverändert (%s) — kein Update nötig", self.account_name, public_ip)
 
         domain_data: dict[str, Any] = {}
         for domain in self.domains:
             resolved_ip = await async_resolve_ip(domain)
+            _LOGGER.debug("[%s] DNS-Auflösung %s → %s", self.account_name, domain, resolved_ip)
             update_status: str | None = None
             update_response: str | None = None
 
             if ip_changed:
+                _LOGGER.debug("[%s] Starte Update für %s mit IP %s", self.account_name, domain, public_ip)
                 update_status, update_response = await self._update_domain(domain, public_ip)
                 if update_status == "ok":
                     self._last_update_times[domain] = datetime.now(timezone.utc)
@@ -115,16 +114,23 @@ class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             code = text.split()[0] if text else ""
             status = "ok" if code in STRATO_OK_CODES else "error"
             if status == "ok":
-                _LOGGER.debug("[%s] %s → %s (%s)", self.account_name, domain, code, text)
+                _LOGGER.debug("[%s] %s Update OK: %s", self.account_name, domain, text)
             else:
-                _LOGGER.warning("[%s] %s → Fehler: %s", self.account_name, domain, text)
+                _LOGGER.error(
+                    "[%s] DynDNS Update fehlgeschlagen für %s: %s",
+                    self.account_name, domain, text,
+                )
             return status, text
         except Exception as exc:
-            _LOGGER.warning("[%s] Update von %s fehlgeschlagen: %s", self.account_name, domain, exc)
+            _LOGGER.error(
+                "[%s] DynDNS Update fehlgeschlagen für %s: %s",
+                self.account_name, domain, exc,
+            )
             return "error", str(exc)
 
     async def async_force_update(self) -> None:
         """Force update all domains regardless of whether the IP changed."""
+        _LOGGER.debug("[%s] Manuelles Update angefordert", self.account_name)
         self._last_ip = None
         await self.async_request_refresh()
 
