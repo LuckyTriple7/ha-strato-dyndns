@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2026-06-10
+### Fixed
+- Domain-Binärsensoren zeigen jetzt den letzten Strato-Rückgabecode in den Attributen an (`last_update_status`, `last_update_response`), auch wenn kein Update gesendet wurde
+
 ## [0.2.0] - 2026-06-09
 ### Fixed
 - manifest.json: `issue_tracker` und `codeowners` ergänzt (HACS-Pflichtfelder für Store-Aufnahme)
