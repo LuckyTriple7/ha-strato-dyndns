@@ -253,8 +253,7 @@ class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         else:
             self._error_backoff.pop(domain, None)
-            self._last_update_results.pop(domain, None)
-            update_status, update_response = None, None
+            update_status, update_response = self._last_update_results.get(domain, (None, None))
             _LOGGER.debug("[%s] %s already up to date — skipping", self.account_name, domain)
 
         return domain, {
