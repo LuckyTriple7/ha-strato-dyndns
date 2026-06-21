@@ -37,19 +37,28 @@ To configure multiple Strato accounts, simply add the integration again.
 
 ## Entities
 
-Per configured account:
+The integration creates one HA device per account and one device per domain. Domain devices are linked to their account device.
+
+**Account device** (`<account>`):
 
 | Entity | Type | Description |
 |--------|------|-------------|
-| `sensor.<account>_public_ipv4` | Sensor | Currently detected public IPv4 address |
-| `sensor.strato_dyndns_public_ipv6` | Sensor | Currently detected public IPv6 address (when IPv6 enabled) |
-| `sensor.<account>_domain_<domain>_resolved_ip` | Sensor | DNS-resolved IPv4 of the domain (via 1.1.1.1 / 8.8.8.8) |
-| `sensor.<account>_domain_<domain>_resolved_ipv6` | Sensor | DNS-resolved IPv6 of the domain (when IPv6 enabled) |
-| `sensor.<account>_domain_<domain>_last_update` | Sensor | Timestamp of last successful Strato update |
-| `binary_sensor.<account>_error` | Problem sensor | `on` when any domain's DNS-resolved IP differs from the public IP |
-| `binary_sensor.<account>_domain_<domain>_ip_mismatch` | Problem sensor | `on` when DNS IPv4 ≠ public IPv4 |
-| `binary_sensor.<account>_domain_<domain>_ipv6_mismatch` | Problem sensor | `on` when DNS IPv6 ≠ public IPv6 (when IPv6 enabled) |
+| `sensor.<account>_public_ipv4` | Sensor · Diagnostic | Currently detected public IPv4 address |
+| `sensor.<account>_public_ipv6` | Sensor · Diagnostic | Currently detected public IPv6 address (when IPv6 enabled) |
+| `binary_sensor.<account>_problem` | Problem sensor | `on` when any domain's DNS-resolved IP differs from the public IP |
 | `button.<account>_update_now` | Button | Force immediate update of all domains, bypassing backoff |
+
+**Domain device** (`<domain>`, e.g. `website.de`):
+
+| Entity | Type | Description |
+|--------|------|-------------|
+| `sensor.<domain>_resolved_ip` | Sensor · Diagnostic | DNS-resolved IPv4 of the domain (via 1.1.1.1 / 8.8.8.8) |
+| `sensor.<domain>_resolved_ipv6` | Sensor · Diagnostic | DNS-resolved IPv6 of the domain (when IPv6 enabled) |
+| `sensor.<domain>_last_update` | Sensor | Timestamp of last successful Strato update |
+| `binary_sensor.<domain>_ip_mismatch` | Problem sensor | `on` when DNS IPv4 ≠ public IPv4 |
+| `binary_sensor.<domain>_ipv6_mismatch` | Problem sensor | `on` when DNS IPv6 ≠ public IPv6 (when IPv6 enabled) |
+
+> Diagnostic entities are shown under the **Diagnostics** tab in the integration overview, keeping the main view focused on what matters.
 
 ## Update Logic
 
@@ -112,19 +121,28 @@ Für mehrere Strato-Accounts die Integration einfach erneut hinzufügen.
 
 ### Entitäten
 
-Pro konfiguriertem Account:
+Die Integration erstellt ein HA-Gerät pro Account und ein Gerät pro Domain. Domain-Geräte sind mit dem zugehörigen Account-Gerät verknüpft.
+
+**Account-Gerät** (`<account>`):
 
 | Entität | Typ | Beschreibung |
 |---------|-----|--------------|
-| `sensor.<account>_public_ipv4` | Sensor | Aktuell erkannte öffentliche IPv4-Adresse |
-| `sensor.strato_dyndns_public_ipv6` | Sensor | Aktuell erkannte öffentliche IPv6-Adresse (wenn IPv6 aktiv) |
-| `sensor.<account>_domain_<domain>_resolved_ip` | Sensor | Per DNS aufgelöste IPv4 der Domain (via 1.1.1.1 / 8.8.8.8) |
-| `sensor.<account>_domain_<domain>_resolved_ipv6` | Sensor | Per DNS aufgelöste IPv6 der Domain (wenn IPv6 aktiv) |
-| `sensor.<account>_domain_<domain>_last_update` | Sensor | Zeitstempel des letzten erfolgreichen Strato-Updates |
-| `binary_sensor.<account>_error` | Problem-Sensor | `an` wenn bei einer Domain DNS-IP ≠ öffentliche IP |
-| `binary_sensor.<account>_domain_<domain>_ip_mismatch` | Problem-Sensor | `an` wenn DNS-IPv4 ≠ öffentliche IPv4 |
-| `binary_sensor.<account>_domain_<domain>_ipv6_mismatch` | Problem-Sensor | `an` wenn DNS-IPv6 ≠ öffentliche IPv6 (wenn IPv6 aktiv) |
+| `sensor.<account>_public_ipv4` | Sensor · Diagnose | Aktuell erkannte öffentliche IPv4-Adresse |
+| `sensor.<account>_public_ipv6` | Sensor · Diagnose | Aktuell erkannte öffentliche IPv6-Adresse (wenn IPv6 aktiv) |
+| `binary_sensor.<account>_problem` | Problem-Sensor | `an` wenn bei einer Domain DNS-IP ≠ öffentliche IP |
 | `button.<account>_update_now` | Button | Sofortige Aktualisierung aller Domains, Backoff wird ignoriert |
+
+**Domain-Gerät** (`<domain>`, z. B. `website.de`):
+
+| Entität | Typ | Beschreibung |
+|---------|-----|--------------|
+| `sensor.<domain>_resolved_ip` | Sensor · Diagnose | Per DNS aufgelöste IPv4 der Domain (via 1.1.1.1 / 8.8.8.8) |
+| `sensor.<domain>_resolved_ipv6` | Sensor · Diagnose | Per DNS aufgelöste IPv6 der Domain (wenn IPv6 aktiv) |
+| `sensor.<domain>_last_update` | Sensor | Zeitstempel des letzten erfolgreichen Strato-Updates |
+| `binary_sensor.<domain>_ip_mismatch` | Problem-Sensor | `an` wenn DNS-IPv4 ≠ öffentliche IPv4 |
+| `binary_sensor.<domain>_ipv6_mismatch` | Problem-Sensor | `an` wenn DNS-IPv6 ≠ öffentliche IPv6 (wenn IPv6 aktiv) |
+
+> Diagnose-Entitäten erscheinen im **Diagnose**-Tab der Integrations-Übersicht und halten die Hauptansicht übersichtlich.
 
 ### Update-Logik
 
