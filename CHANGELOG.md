@@ -2,24 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.2] - 2026-06-21
+### Changed
+- Each domain is now its own HA device — entities are grouped per domain instead of all under one account device
+- Entity names shortened: `website.de Resolved IP` instead of `mein_strato Domain website.de Resolved IP`
+- Resolved IP and Public IP sensors are now categorized as `DIAGNOSTIC` (appear under the Diagnostics tab in the integration overview)
+- Account-level sensor renamed from "Error" to "Problem" (matches device class)
+- "Update Now" button now correctly grouped under the account device
+
 ## [0.2.1] - 2026-06-10
 ### Fixed
-- Domain-Binärsensoren zeigen jetzt den letzten Strato-Rückgabecode in den Attributen an (`last_update_status`, `last_update_response`), auch wenn kein Update gesendet wurde
+- Domain binary sensors now persistently show the last Strato response code in attributes (`last_update_status`, `last_update_response`), even when no update was sent
 
 ## [0.2.0] - 2026-06-09
 ### Fixed
-- manifest.json: `issue_tracker` und `codeowners` ergänzt (HACS-Pflichtfelder für Store-Aufnahme)
+- manifest.json: added `issue_tracker` and `codeowners` (required fields for HACS Default Store submission)
 
 ## [0.1.9] - 2026-06-09
 ### Changed
-- Globaler Problem-Sensor zeigt nur noch `ON`, wenn DNS-Resolver-IP von der öffentlichen IP abweicht (IPv4 oder IPv6)
-- Update-Fehler einzelner Domains werden im globalen Sensor nicht mehr berücksichtigt — die Domain-Sensoren zeigen das weiterhin separat
+- Global problem sensor now only turns `ON` when a DNS resolver IP differs from the public IP (IPv4 or IPv6)
+- Update errors on individual domains are no longer considered by the global sensor — the per-domain sensors still show them separately
 
 ## [0.1.8] - 2026-06-09
 ### Fixed
-- Kein unnötiger Strato-Update mehr beim HA-Neustart
-  - Nach Neustart ist der In-Memory-Zustand leer → DNS-Check entscheidet (wie bisher, sicher)
-  - Innerhalb einer laufenden Session → gesendete IP entscheidet (verhindert Re-Send während DNS-Propagierung)
+- No more unnecessary Strato update on HA restart
+  - After restart, in-memory state is empty → DNS check decides (safe, same as before)
+  - Within a running session → last sent IP decides (prevents re-send while DNS is propagating)
 
 ## [0.1.7] - 2026-06-09
 ### Changed

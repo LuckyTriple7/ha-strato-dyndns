@@ -6,6 +6,7 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -32,23 +33,35 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-def _device_info(coordinator: StratoDynDNSCoordinator) -> DeviceInfo:
+def _account_device_info(coordinator: StratoDynDNSCoordinator) -> DeviceInfo:
     return DeviceInfo(
         identifiers={(DOMAIN, coordinator.account_name)},
-        name=f"Strato DynDNS · {coordinator.account_name}",
+        name=coordinator.account_name,
         manufacturer="Strato AG",
         model="DynDNS",
     )
 
 
+def _domain_device_info(coordinator: StratoDynDNSCoordinator, domain: str) -> DeviceInfo:
+    return DeviceInfo(
+        identifiers={(DOMAIN, f"{coordinator.account_name}_{domain}")},
+        name=domain,
+        manufacturer="Strato AG",
+        model="DynDNS",
+        via_device=(DOMAIN, coordinator.account_name),
+    )
+
+
 class StratoPublicIPv4Sensor(CoordinatorEntity[StratoDynDNSCoordinator], SensorEntity):
+    _attr_has_entity_name = True
     _attr_icon = "mdi:ip-network"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, coordinator: StratoDynDNSCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry.entry_id}_public_ipv4"
-        self._attr_name = f"{coordinator.account_name} Public IPv4"
-        self._attr_device_info = _device_info(coordinator)
+        self._attr_name = "Public IPv4"
+        self._attr_device_info = _account_device_info(coordinator)
 
     @property
     def native_value(self) -> str | None:
@@ -64,14 +77,15 @@ class StratoPublicIPv4Sensor(CoordinatorEntity[StratoDynDNSCoordinator], SensorE
 
 
 class StratoPublicIPv6Sensor(CoordinatorEntity[StratoDynDNSCoordinator], SensorEntity):
+    _attr_has_entity_name = True
     _attr_icon = "mdi:ip-network-outline"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, coordinator: StratoDynDNSCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry.entry_id}_public_ipv6"
-        # No account prefix — public IPv6 is network-wide, not per account
         self._attr_name = "Public IPv6"
-        self._attr_device_info = _device_info(coordinator)
+        self._attr_device_info = _account_device_info(coordinator)
 
     @property
     def native_value(self) -> str | None:
@@ -87,7 +101,9 @@ class StratoPublicIPv6Sensor(CoordinatorEntity[StratoDynDNSCoordinator], SensorE
 
 
 class StratoDomainResolvedIPSensor(CoordinatorEntity[StratoDynDNSCoordinator], SensorEntity):
+    _attr_has_entity_name = True
     _attr_icon = "mdi:dns"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self,
@@ -98,8 +114,8 @@ class StratoDomainResolvedIPSensor(CoordinatorEntity[StratoDynDNSCoordinator], S
         super().__init__(coordinator)
         slug = domain.replace(".", "_").replace("-", "_")
         self._attr_unique_id = f"{entry.entry_id}_{slug}_resolved_ip"
-        self._attr_name = f"{coordinator.account_name} Domain {domain} Resolved IP"
-        self._attr_device_info = _device_info(coordinator)
+        self._attr_name = "Resolved IP"
+        self._attr_device_info = _domain_device_info(coordinator, domain)
         self._domain = domain
 
     @property
@@ -128,7 +144,9 @@ class StratoDomainResolvedIPSensor(CoordinatorEntity[StratoDynDNSCoordinator], S
 
 
 class StratoDomainResolvedIPv6Sensor(CoordinatorEntity[StratoDynDNSCoordinator], SensorEntity):
+    _attr_has_entity_name = True
     _attr_icon = "mdi:dns-outline"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self,
@@ -139,8 +157,8 @@ class StratoDomainResolvedIPv6Sensor(CoordinatorEntity[StratoDynDNSCoordinator],
         super().__init__(coordinator)
         slug = domain.replace(".", "_").replace("-", "_")
         self._attr_unique_id = f"{entry.entry_id}_{slug}_resolved_ipv6"
-        self._attr_name = f"{coordinator.account_name} Domain {domain} Resolved IPv6"
-        self._attr_device_info = _device_info(coordinator)
+        self._attr_name = "Resolved IPv6"
+        self._attr_device_info = _domain_device_info(coordinator, domain)
         self._domain = domain
 
     @property
@@ -158,6 +176,7 @@ class StratoDomainResolvedIPv6Sensor(CoordinatorEntity[StratoDynDNSCoordinator],
 
 
 class StratoDomainLastUpdateSensor(CoordinatorEntity[StratoDynDNSCoordinator], SensorEntity):
+    _attr_has_entity_name = True
     _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_icon = "mdi:clock-check-outline"
 
@@ -170,8 +189,8 @@ class StratoDomainLastUpdateSensor(CoordinatorEntity[StratoDynDNSCoordinator], S
         super().__init__(coordinator)
         slug = domain.replace(".", "_").replace("-", "_")
         self._attr_unique_id = f"{entry.entry_id}_{slug}_last_update"
-        self._attr_name = f"{coordinator.account_name} Domain {domain} Last Update"
-        self._attr_device_info = _device_info(coordinator)
+        self._attr_name = "Last Update"
+        self._attr_device_info = _domain_device_info(coordinator, domain)
         self._domain = domain
 
     @property

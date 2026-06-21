@@ -28,26 +28,37 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-def _device_info(coordinator: StratoDynDNSCoordinator) -> DeviceInfo:
+def _account_device_info(coordinator: StratoDynDNSCoordinator) -> DeviceInfo:
     return DeviceInfo(
         identifiers={(DOMAIN, coordinator.account_name)},
-        name=f"Strato DynDNS · {coordinator.account_name}",
+        name=coordinator.account_name,
         manufacturer="Strato AG",
         model="DynDNS",
     )
 
 
-class StratoAccountErrorSensor(CoordinatorEntity[StratoDynDNSCoordinator], BinarySensorEntity):
-    """ON when any domain's last update attempt returned an error."""
+def _domain_device_info(coordinator: StratoDynDNSCoordinator, domain: str) -> DeviceInfo:
+    return DeviceInfo(
+        identifiers={(DOMAIN, f"{coordinator.account_name}_{domain}")},
+        name=domain,
+        manufacturer="Strato AG",
+        model="DynDNS",
+        via_device=(DOMAIN, coordinator.account_name),
+    )
 
+
+class StratoAccountErrorSensor(CoordinatorEntity[StratoDynDNSCoordinator], BinarySensorEntity):
+    """ON when any domain's DNS-resolved IP differs from the public IP."""
+
+    _attr_has_entity_name = True
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
     _attr_icon = "mdi:cloud-alert"
 
     def __init__(self, coordinator: StratoDynDNSCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry.entry_id}_account_error"
-        self._attr_name = f"{coordinator.account_name} Error"
-        self._attr_device_info = _device_info(coordinator)
+        self._attr_name = "Problem"
+        self._attr_device_info = _account_device_info(coordinator)
 
     @property
     def is_on(self) -> bool | None:
@@ -81,6 +92,7 @@ class StratoAccountErrorSensor(CoordinatorEntity[StratoDynDNSCoordinator], Binar
 
 
 class StratoDomainMismatchSensor(CoordinatorEntity[StratoDynDNSCoordinator], BinarySensorEntity):
+    _attr_has_entity_name = True
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
     _attr_icon = "mdi:alert-circle-outline"
 
@@ -93,8 +105,8 @@ class StratoDomainMismatchSensor(CoordinatorEntity[StratoDynDNSCoordinator], Bin
         super().__init__(coordinator)
         slug = domain.replace(".", "_").replace("-", "_")
         self._attr_unique_id = f"{entry.entry_id}_{slug}_mismatch"
-        self._attr_name = f"{coordinator.account_name} Domain {domain} IP Mismatch"
-        self._attr_device_info = _device_info(coordinator)
+        self._attr_name = "IP Mismatch"
+        self._attr_device_info = _domain_device_info(coordinator, domain)
         self._domain = domain
 
     @property
@@ -117,6 +129,7 @@ class StratoDomainMismatchSensor(CoordinatorEntity[StratoDynDNSCoordinator], Bin
 
 
 class StratoDomainIPv6MismatchSensor(CoordinatorEntity[StratoDynDNSCoordinator], BinarySensorEntity):
+    _attr_has_entity_name = True
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
     _attr_icon = "mdi:alert-circle-outline"
 
@@ -129,8 +142,8 @@ class StratoDomainIPv6MismatchSensor(CoordinatorEntity[StratoDynDNSCoordinator],
         super().__init__(coordinator)
         slug = domain.replace(".", "_").replace("-", "_")
         self._attr_unique_id = f"{entry.entry_id}_{slug}_ipv6_mismatch"
-        self._attr_name = f"{coordinator.account_name} Domain {domain} IPv6 Mismatch"
-        self._attr_device_info = _device_info(coordinator)
+        self._attr_name = "IPv6 Mismatch"
+        self._attr_device_info = _domain_device_info(coordinator, domain)
         self._domain = domain
 
     @property
