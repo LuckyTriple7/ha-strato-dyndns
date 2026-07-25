@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0] - 2026-07-25
+### Added
+- Diagnostics support (`diagnostics.py`) — downloadable diagnostics dump from the integration's device page, with username/password/account_name redacted
+### Changed
+- Replaced `async_timeout` dependency with built-in `asyncio.timeout`
+
 ## [0.2.2] - 2026-06-21
 ### Changed
 - Each domain is now its own HA device — entities are grouped per domain instead of all under one account device

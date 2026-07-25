@@ -6,7 +6,6 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import aiohttp
-import async_timeout
 import dns.resolver
 
 from homeassistant.core import HomeAssistant
@@ -34,7 +33,7 @@ async def async_get_public_ip(session: aiohttp.ClientSession) -> tuple[str, str]
     """Return (ipv4, provider_url) or None if all providers fail."""
     for url in IP_PROVIDERS:
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 async with session.get(url) as resp:
                     if resp.status == 200:
                         return (await resp.text()).strip(), url
@@ -47,7 +46,7 @@ async def async_get_public_ipv6(session: aiohttp.ClientSession) -> tuple[str, st
     """Return (ipv6, provider_url) or None if all providers fail or no IPv6 connectivity."""
     for url in IPv6_PROVIDERS:
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 async with session.get(url) as resp:
                     if resp.status == 200:
                         text = (await resp.text()).strip()
@@ -272,7 +271,7 @@ class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             auth = aiohttp.BasicAuth(self.username, self.password)
             myip = f"{ip},{ip6}" if ip6 else ip
             params = {"system": "dyndns", "hostname": domain, "myip": myip}
-            async with async_timeout.timeout(30):
+            async with asyncio.timeout(30):
                 async with self._http.get(
                     STRATO_UPDATE_URL, auth=auth, params=params
                 ) as resp:
