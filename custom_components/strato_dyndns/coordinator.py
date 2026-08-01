@@ -9,6 +9,7 @@ import aiohttp
 import dns.resolver
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from homeassistant.components import persistent_notification
@@ -119,13 +120,7 @@ class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._last_sent_ip6: dict[str, str] = {}
         self._error_backoff: dict[str, datetime] = {}
         self._force_update: bool = False
-        self._session: aiohttp.ClientSession | None = None
-
-    @property
-    def _http(self) -> aiohttp.ClientSession:
-        if self._session is None or self._session.closed:
-            self._session = aiohttp.ClientSession()
-        return self._session
+        self._http = async_get_clientsession(hass)
 
     async def _async_update_data(self) -> dict[str, Any]:
         result = await async_get_public_ip(self._http)
@@ -382,7 +377,3 @@ class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         _LOGGER.debug("[%s] Manual update requested", self.account_name)
         self._force_update = True
         await self.async_request_refresh()
-
-    async def async_close(self) -> None:
-        if self._session and not self._session.closed:
-            await self._session.close()

@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-08-01
+### Changed
+- Coordinator now reuses Home Assistant's shared aiohttp session (`async_get_clientsession`) instead of creating its own — thanks @Frenck for the review nit
+
 ## [1.0.0] - 2026-07-25
 ### Added
 - Diagnostics support (`diagnostics.py`) — downloadable diagnostics dump from the integration's device page, with username/password/account_name redacted

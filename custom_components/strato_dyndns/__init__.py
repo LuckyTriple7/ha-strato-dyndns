@@ -46,6 +46,5 @@ async def _async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        coordinator: StratoDynDNSCoordinator = hass.data[DOMAIN].pop(entry.entry_id)
-        await coordinator.async_close()
+        hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
