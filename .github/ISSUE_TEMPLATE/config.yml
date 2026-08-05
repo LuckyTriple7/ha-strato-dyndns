@@ -1,14 +1,1 @@
 blank_issues_enabled: false
-contact_links:
-  - name: Home Assistant Community Forum
-    url: https://community.home-assistant.io/
-    about: General Home Assistant questions and setup help that are not specific to this integration.
-  - name: Home Assistant Core issues
-    url: https://github.com/home-assistant/core/issues
-    about: Problems with Home Assistant itself rather than with this integration.
-  - name: HACS custom repositories documentation
-    url: https://www.hacs.xyz/docs/faq/custom_repositories/
-    about: Help with adding and installing this integration through HACS.
-  - name: Strato support and DynDNS documentation
-    url: https://www.strato.de/faq/domains/so-einfach-richten-sie-dyndns-fuer-ihre-domain-ein/
-    about: Problems with your Strato account, DynDNS credentials or DNS settings are not integration bugs.
