@@ -1,0 +1,67 @@
+name: Request a feature for Strato DynDNS
+description: Suggest a new feature or an enhancement to an existing one.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This issue form is for feature requests only!
+
+        If something is broken, please [report a bug instead][bug].
+
+        [bug]: https://github.com/LuckyTriple7/ha-strato-dyndns/issues/new?template=bug_report.yml
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched the [existing issues](https://github.com/LuckyTriple7/ha-strato-dyndns/issues?q=is%3Aissue) and this has not been requested yet.
+          required: true
+        - label: This is a request for Strato DynDNS, not for Home Assistant Core or Strato itself.
+          required: true
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: The problem you are trying to solve
+      description: >-
+        A clear and concise description of what you are missing today.
+        Tell us what you are trying to achieve, not only the solution you have in mind.
+      placeholder: |
+        I want to automate ... but there is currently no way to ...
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: Proposed solution
+      description: A clear and concise description of what you want to happen.
+  - type: dropdown
+    id: area
+    validations:
+      required: true
+    attributes:
+      label: Which part of the integration does this affect?
+      options:
+        - Config flow / options
+        - New sensor or binary sensor
+        - Buttons / services / actions
+        - Public IP detection (new provider, detection method)
+        - IPv6 / AAAA handling
+        - Update trigger logic
+        - Notifications
+        - Support for another DynDNS provider
+        - Translations
+        - Documentation
+        - Other / not sure
+  - type: textarea
+    attributes:
+      label: Alternatives you considered
+      description: >-
+        Templates, automations, router-side DynDNS or other integrations you already
+        tried, and why they do not solve the problem.
+  - type: textarea
+    attributes:
+      label: Additional information
+      description: >
+        Links to Strato documentation, API responses, mockups, screenshots or anything
+        else that helps explain the request. Do not include credentials.

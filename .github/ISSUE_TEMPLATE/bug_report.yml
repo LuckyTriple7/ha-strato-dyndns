@@ -1,0 +1,194 @@
+name: Report an issue with Strato DynDNS
+description: Report a bug in the Strato DynDNS custom integration.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This issue form is for reporting bugs only!
+
+        If you have a feature or enhancement request, please [use the feature request form instead][fr].
+
+        **Never post your Strato password or DynDNS credentials in an issue.**
+
+        [fr]: https://github.com/LuckyTriple7/ha-strato-dyndns/issues/new?template=feature_request.yml
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched the [existing issues](https://github.com/LuckyTriple7/ha-strato-dyndns/issues?q=is%3Aissue) and this problem has not been reported yet.
+          required: true
+        - label: I am running the latest released version of this integration.
+          required: true
+        - label: I restarted Home Assistant after installing or updating the integration.
+          required: true
+        - label: DynDNS is enabled for the affected domain in my Strato control panel and the credentials work there.
+          required: true
+        - label: I removed passwords, tokens and other credentials from everything I paste below.
+          required: true
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: The problem
+      description: >-
+        Describe the issue you are experiencing here. Tell us what you were trying
+        to do and what happened instead.
+
+        Provide a clear and concise description of what the problem is.
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Environment
+  - type: input
+    id: integration_version
+    validations:
+      required: true
+    attributes:
+      label: What version of Strato DynDNS has the issue?
+      placeholder: "1.1.0"
+      description: >-
+        Can be found in HACS, or as the `version` field in
+        `custom_components/strato_dyndns/manifest.json`.
+  - type: input
+    id: last_working_version
+    attributes:
+      label: What was the last working version of Strato DynDNS?
+      placeholder: "1.0.9"
+      description: If known, otherwise leave blank.
+  - type: input
+    id: ha_version
+    validations:
+      required: true
+    attributes:
+      label: What version of Home Assistant Core are you running?
+      placeholder: core-
+      description: >
+        Can be found in: [Settings ⇒ System ⇒ Repairs ⇒ Three Dots in Upper Right ⇒ System information](https://my.home-assistant.io/redirect/system_health/).
+
+        [![Open your Home Assistant instance and show the system information.](https://my.home-assistant.io/badges/system_health.svg)](https://my.home-assistant.io/redirect/system_health/)
+  - type: dropdown
+    id: installation_type
+    validations:
+      required: true
+    attributes:
+      label: What type of installation are you running?
+      description: >
+        Can be found in: [Settings ⇒ System ⇒ Repairs ⇒ Three Dots in Upper Right ⇒ System information](https://my.home-assistant.io/redirect/system_health/).
+      options:
+        - Home Assistant OS
+        - Home Assistant Container
+        - Home Assistant Supervised
+        - Home Assistant Core
+  - type: dropdown
+    id: installation_method
+    validations:
+      required: true
+    attributes:
+      label: How did you install Strato DynDNS?
+      options:
+        - HACS
+        - Manual copy into custom_components
+  - type: dropdown
+    id: area
+    validations:
+      required: true
+    attributes:
+      label: Which part of the integration is affected?
+      options:
+        - Setup / config flow (adding an account)
+        - Options / reconfiguring an existing account
+        - Public IPv4 detection
+        - IPv6 detection / AAAA records
+        - DNS update request to Strato (update result, abuse, badauth)
+        - Update trigger logic (updates too often / not at all)
+        - Sensor entities
+        - Binary sensor entities
+        - Update button
+        - Persistent notifications
+        - Error backoff
+        - Translations
+        - Other / not sure
+  - type: dropdown
+    id: ip_mode
+    validations:
+      required: true
+    attributes:
+      label: Which IP mode are you using?
+      options:
+        - IPv4 only
+        - IPv4 and IPv6 (dual stack)
+        - IPv6 only
+        - Not sure
+  - type: input
+    id: domain_count
+    attributes:
+      label: How many accounts and domains do you have configured?
+      placeholder: "1 account, main domain + 4 subdomains"
+  - type: input
+    id: update_interval
+    attributes:
+      label: Configured polling interval
+      placeholder: "300 seconds"
+
+  - type: markdown
+    attributes:
+      value: |
+        # Details
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: >-
+        If applicable, list the steps needed to trigger the problem.
+      placeholder: |
+        1. Configure an account with ...
+        2. Change the public IP (or press the update button)
+        3. The sensor shows ...
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics information
+      placeholder: "drag-and-drop the diagnostics data file here (do not copy-and-paste the content)"
+      description: >-
+        Strato DynDNS provides [diagnostic data](https://www.home-assistant.io/docs/configuration/troubleshooting/#debug-logs-and-diagnostics):
+        Settings ⇒ Devices & Services ⇒ Strato DynDNS ⇒ Three Dots ⇒ Download diagnostics.
+
+        **It would really help if you could download the diagnostics data and
+        <ins>drag-and-drop that file into the textbox below.</ins>**
+
+        Credentials are redacted automatically — please still check before posting.
+  - type: textarea
+    id: yaml
+    attributes:
+      label: Example YAML snippet
+      description: |
+        If applicable, provide an example piece of YAML that helps reproduce this problem.
+        This can be from an automation, script or template.
+      render: yaml
+  - type: textarea
+    id: logs
+    attributes:
+      label: Anything in the logs that might be useful?
+      description: |
+        Enable debug logging by adding this to `configuration.yaml`, restarting Home Assistant, and reproducing the problem:
+
+        ```yaml
+        logger:
+          default: warning
+          logs:
+            custom_components.strato_dyndns: debug
+        ```
+
+        Then paste the relevant lines from Settings ⇒ System ⇒ Logs.
+        **Redact your domains if you consider them private, and always redact credentials.**
+      render: txt
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional information
+      description: >
+        If you have any additional information for us, use the field below.
+        Screenshots are welcome.
