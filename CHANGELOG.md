@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.1] - 2026-08-11
+### Fixed
+- Changing or removing a subdomain (main config or options flow) left its old device and entities behind forever — disabling them or restarting HA had no effect. The integration now removes the stale device (and its entities) for any domain no longer configured, on every setup/reload.
+
 ## [1.1.0] - 2026-08-01
 ### Changed
 - Coordinator now reuses Home Assistant's shared aiohttp session (`async_get_clientsession`) instead of creating its own — thanks @Frenck for the review nit
