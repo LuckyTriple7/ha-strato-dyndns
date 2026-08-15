@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.2] - 2026-08-15
+### Changed
+- New brand icon, plus `logo.png` and the hDPI variants `icon@2x.png` / `logo@2x.png`. Home Assistant serves these straight from the integration's `brand/` folder since 2026.3 — no entry in the brands CDN required (custom integrations are no longer accepted there)
+
 ## [1.1.1] - 2026-08-11
 ### Fixed
 - Changing or removing a subdomain (main config or options flow) left its old device and entities behind forever — disabling them or restarting HA had no effect. The integration now removes the stale device (and its entities) for any domain no longer configured, on every setup/reload.
