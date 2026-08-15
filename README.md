@@ -3,6 +3,8 @@
 [![HACS](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 [![Version](https://img.shields.io/github/v/release/LuckyTriple7/ha-strato-dyndns)](https://github.com/LuckyTriple7/ha-strato-dyndns/releases)
 
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/luckytriple7)
+
 Home Assistant custom integration for Strato DynDNS. Monitors your public IPv4 (and optionally IPv6) address and automatically updates all configured domains at Strato when the IP changes.
 
 ## Features
