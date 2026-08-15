@@ -22,10 +22,11 @@ MOCK_CONFIG = {
 
 @pytest.fixture
 def mock_public_ip():
+    # async_get_public_ip returns (ip, provider_url), not a bare string.
     with patch(
         "custom_components.strato_dyndns.coordinator.async_get_public_ip",
         new_callable=AsyncMock,
-        return_value="1.2.3.4",
+        return_value=("1.2.3.4", "https://api.ipify.org"),
     ) as mock:
         yield mock
 
