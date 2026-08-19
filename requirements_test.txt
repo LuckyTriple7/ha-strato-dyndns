@@ -3,4 +3,4 @@ pytest-asyncio
 aiohttp
 async-timeout
 voluptuous
-dnspython==2.7.0
+dnspython==2.8.0
