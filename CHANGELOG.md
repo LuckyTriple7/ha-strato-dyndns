@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.3] - 2026-08-20
+
+## What's Changed
+* chore(deps): Bump dnspython from 2.7.0 to 2.8.0 by @dependabot[bot] in https://github.com/LuckyTriple7/ha-strato-dyndns/pull/4
+
+
+**Full Changelog**: https://github.com/LuckyTriple7/ha-strato-dyndns/compare/v1.1.2...v1.1.3
+
+
 All notable changes to this project will be documented in this file.
 
 ## [1.1.2] - 2026-08-15
