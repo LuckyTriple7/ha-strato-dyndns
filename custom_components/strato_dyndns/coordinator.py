@@ -98,6 +98,7 @@ class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         update_interval: int,
         ipv6_enabled: bool = False,
         notifications_enabled: bool = True,
+        aaaa_check_enabled: bool = False,
     ) -> None:
         super().__init__(
             hass,
@@ -111,6 +112,7 @@ class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.domains = domains
         self.ipv6_enabled = ipv6_enabled
         self.notifications_enabled = notifications_enabled
+        self.aaaa_check_enabled = aaaa_check_enabled
         self._account_slug = account_name.lower().replace(" ", "_").replace(".", "_").replace("-", "_")
         self._active_notifications: set[str] = set()
         self._last_ip: str | None = None
@@ -173,7 +175,10 @@ class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     ) -> tuple[str, dict[str, Any]]:
         resolved_ip = await async_resolve_ip(domain)
         resolved_ip6: str | None = None
-        if self.ipv6_enabled:
+        # Also resolved when only aaaa_check_enabled is set: that option is a
+        # passive "does an AAAA record exist at all" monitor, independent of
+        # whether IPv6 updates are actually managed here.
+        if self.ipv6_enabled or self.aaaa_check_enabled:
             resolved_ip6 = await async_resolve_ipv6(domain)
         _LOGGER.debug(
             "[%s] DNS resolved %s -> A=%s AAAA=%s",
@@ -363,6 +368,29 @@ class StratoDynDNSCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                                 f"Domain: {domain}\n"
                                 f"DNS resolves to (AAAA): {v.get('resolved_ip6') or '—'}\n"
                                 f"Public IPv6:            {public_ip6}"
+                            )
+                        persistent_notification.async_create(self.hass, message, title, notif_id)
+                        self._active_notifications.add(notif_id)
+
+        # --- AAAA record detected (opt-in monitor, independent of ipv6_enabled) ---
+        if self.aaaa_check_enabled:
+            for domain, v in domain_data.items():
+                if v.get("resolved_ip6") is not None:
+                    slug = domain.replace(".", "_").replace("-", "_")
+                    notif_id = f"strato_dyndns_aaaa_detected_{self._account_slug}_{slug}"
+                    current_problems.add(notif_id)
+                    if notif_id not in self._active_notifications:
+                        if use_de:
+                            title = f"Strato DynDNS – AAAA-Eintrag gefunden ({self.account_name})"
+                            message = (
+                                f"Domain: {domain}\n"
+                                f"AAAA-Eintrag (IPv6): {v.get('resolved_ip6')}"
+                            )
+                        else:
+                            title = f"Strato DynDNS – AAAA Record Found ({self.account_name})"
+                            message = (
+                                f"Domain: {domain}\n"
+                                f"AAAA record (IPv6): {v.get('resolved_ip6')}"
                             )
                         persistent_notification.async_create(self.hass, message, title, notif_id)
                         self._active_notifications.add(notif_id)

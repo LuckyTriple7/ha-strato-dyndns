@@ -28,7 +28,7 @@ async def async_setup_entry(
     for domain in coordinator.domains:
         entities.append(StratoDomainResolvedIPSensor(coordinator, entry, domain))
         entities.append(StratoDomainLastUpdateSensor(coordinator, entry, domain))
-        if coordinator.ipv6_enabled:
+        if coordinator.ipv6_enabled or coordinator.aaaa_check_enabled:
             entities.append(StratoDomainResolvedIPv6Sensor(coordinator, entry, domain))
     async_add_entities(entities)
 

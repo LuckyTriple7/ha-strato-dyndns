@@ -78,7 +78,7 @@ class TestAsyncResolveIp:
 
 
 class TestStratoDynDNSCoordinator:
-    def _make_coordinator(self, hass):
+    def _make_coordinator(self, hass, **overrides):
         return StratoDynDNSCoordinator(
             hass=hass,
             account_name="Test",
@@ -86,6 +86,7 @@ class TestStratoDynDNSCoordinator:
             password="pass",
             domains=["home.example.de"],
             update_interval=5,
+            **overrides,
         )
 
     async def test_sends_update_when_dns_differs_on_first_run(
@@ -189,6 +190,51 @@ class TestStratoDynDNSCoordinator:
             await coordinator._async_update_data()
 
         failing_update.assert_called_once()
+
+    async def test_aaaa_check_resolves_without_ipv6_enabled(
+        self, hass, mock_public_ip, mock_resolve_ip, mock_strato_update
+    ):
+        # aaaa_check_enabled is a passive monitor: it must not require (or
+        # imply) ipv6_enabled, which manages actually sending AAAA updates.
+        with patch(
+            "custom_components.strato_dyndns.coordinator.async_resolve_ipv6",
+            new_callable=AsyncMock,
+            return_value="2001:db8::1",
+        ) as resolve_ipv6:
+            coordinator = self._make_coordinator(hass, aaaa_check_enabled=True)
+            data = await coordinator._async_update_data()
+
+        resolve_ipv6.assert_called_once_with("home.example.de")
+        assert data["domains"]["home.example.de"]["resolved_ip6"] == "2001:db8::1"
+
+    async def test_no_aaaa_lookup_when_check_disabled(
+        self, hass, mock_public_ip, mock_resolve_ip, mock_strato_update
+    ):
+        with patch(
+            "custom_components.strato_dyndns.coordinator.async_resolve_ipv6",
+            new_callable=AsyncMock,
+        ) as resolve_ipv6:
+            coordinator = self._make_coordinator(hass)  # ipv6_enabled and aaaa_check_enabled both default False
+            data = await coordinator._async_update_data()
+
+        resolve_ipv6.assert_not_called()
+        assert data["domains"]["home.example.de"]["resolved_ip6"] is None
+
+    async def test_aaaa_detected_notification_created(
+        self, hass, mock_public_ip, mock_resolve_ip, mock_strato_update
+    ):
+        with patch(
+            "custom_components.strato_dyndns.coordinator.async_resolve_ipv6",
+            new_callable=AsyncMock,
+            return_value="2001:db8::1",
+        ), patch(
+            "custom_components.strato_dyndns.coordinator.persistent_notification.async_create"
+        ) as mock_create:
+            coordinator = self._make_coordinator(hass, aaaa_check_enabled=True)
+            await coordinator._async_update_data()
+
+        notif_ids = [call.args[3] for call in mock_create.call_args_list]
+        assert "strato_dyndns_aaaa_detected_test_home_example_de" in notif_ids
 
     async def test_raises_on_no_public_ip(self, hass):
         from homeassistant.helpers.update_coordinator import UpdateFailed

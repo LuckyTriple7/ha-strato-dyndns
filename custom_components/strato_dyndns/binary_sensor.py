@@ -21,6 +21,8 @@ async def async_setup_entry(
 ) -> None:
     coordinator: StratoDynDNSCoordinator = hass.data[DOMAIN][entry.entry_id]
     entities: list[BinarySensorEntity] = [StratoAccountErrorSensor(coordinator, entry)]
+    if coordinator.aaaa_check_enabled:
+        entities.append(StratoAaaaDetectedSensor(coordinator, entry))
     for domain in coordinator.domains:
         entities.append(StratoDomainMismatchSensor(coordinator, entry, domain))
         if coordinator.ipv6_enabled:
@@ -88,6 +90,48 @@ class StratoAccountErrorSensor(CoordinatorEntity[StratoDynDNSCoordinator], Binar
         return {
             "problem_domains": list(problems.keys()),
             "details": problems,
+        }
+
+
+class StratoAaaaDetectedSensor(CoordinatorEntity[StratoDynDNSCoordinator], BinarySensorEntity):
+    """ON when any managed domain has an AAAA (IPv6) DNS record.
+
+    Opt-in via aaaa_check_enabled — for setups where IPv6 doesn't actually
+    work and a stray AAAA record (leftover or added elsewhere) would make
+    dual-stack clients try, and fail, to reach the domain over IPv6.
+    """
+
+    _attr_has_entity_name = True
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_icon = "mdi:alert-circle-outline"
+
+    def __init__(self, coordinator: StratoDynDNSCoordinator, entry: ConfigEntry) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{entry.entry_id}_aaaa_detected"
+        self._attr_name = "AAAA Record"
+        self._attr_device_info = _account_device_info(coordinator)
+
+    @property
+    def is_on(self) -> bool | None:
+        if not self.coordinator.data:
+            return None
+        return any(
+            v.get("resolved_ip6") is not None
+            for v in self.coordinator.data["domains"].values()
+        )
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        if not self.coordinator.data:
+            return {}
+        affected = {
+            domain: v["resolved_ip6"]
+            for domain, v in self.coordinator.data["domains"].items()
+            if v.get("resolved_ip6") is not None
+        }
+        return {
+            "affected_domains": list(affected.keys()),
+            "details": affected,
         }
 
 

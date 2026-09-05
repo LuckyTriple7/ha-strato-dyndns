@@ -5,6 +5,7 @@ CONF_DOMAINS = "domains"
 CONF_UPDATE_INTERVAL = "update_interval"
 CONF_IPV6_ENABLED = "ipv6_enabled"
 CONF_NOTIFICATIONS_ENABLED = "notifications_enabled"
+CONF_AAAA_CHECK_ENABLED = "aaaa_check_enabled"
 
 DEFAULT_UPDATE_INTERVAL = 30  # seconds
 

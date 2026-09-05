@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0] - 2026-09-05
+### Added
+- **New option: "Check for AAAA record"** (`aaaa_check_enabled`, off by default) — independent of "Enable IPv6", which manages actually sending AAAA updates. This is a passive monitor for setups where IPv6 doesn't work but a stray AAAA record (leftover, or added elsewhere) would still make dual-stack clients try, and fail, to reach the domain over IPv6
+  - Each domain's **Resolved IPv6** sensor now also appears when this option alone is enabled (state is `unknown` when no AAAA record exists)
+  - A new account-level **AAAA Record** problem sensor turns on when any managed domain has an AAAA record, with `affected_domains` and per-domain `details` attributes
+  - A persistent notification (German/English) is raised per affected domain, and dismissed once the record is gone
+
 ## [1.1.4] - 2026-09-05
 ### Fixed
 - Domain devices linked to their account device via `DeviceInfo.via_device` (identifier-based), which Home Assistant flags as deprecated and will remove in 2027.8.0. The account device is now registered explicitly on setup, and domain devices link to it via `via_device_id` (its actual device id)

@@ -7,6 +7,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
+    CONF_AAAA_CHECK_ENABLED,
     CONF_ACCOUNT_NAME,
     CONF_IPV6_ENABLED,
     CONF_NOTIFICATIONS_ENABLED,
@@ -65,6 +66,7 @@ class StratoDynDNSConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._data[CONF_UPDATE_INTERVAL] = user_input[CONF_UPDATE_INTERVAL]
                 self._data[CONF_IPV6_ENABLED] = user_input.get(CONF_IPV6_ENABLED, False)
                 self._data[CONF_NOTIFICATIONS_ENABLED] = user_input.get(CONF_NOTIFICATIONS_ENABLED, True)
+                self._data[CONF_AAAA_CHECK_ENABLED] = user_input.get(CONF_AAAA_CHECK_ENABLED, False)
 
                 unique_id = self._data[CONF_ACCOUNT_NAME].lower().replace(" ", "_")
                 await self.async_set_unique_id(unique_id)
@@ -82,6 +84,7 @@ class StratoDynDNSConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ): vol.All(int, vol.Range(min=10, max=3600)),
                 vol.Optional(CONF_IPV6_ENABLED, default=False): bool,
                 vol.Optional(CONF_NOTIFICATIONS_ENABLED, default=True): bool,
+                vol.Optional(CONF_AAAA_CHECK_ENABLED, default=False): bool,
             }
         )
         return self.async_show_form(
@@ -110,6 +113,7 @@ class StratoDynDNSOptionsFlow(config_entries.OptionsFlow):
                         CONF_UPDATE_INTERVAL: user_input[CONF_UPDATE_INTERVAL],
                         CONF_IPV6_ENABLED: user_input.get(CONF_IPV6_ENABLED, False),
                         CONF_NOTIFICATIONS_ENABLED: user_input.get(CONF_NOTIFICATIONS_ENABLED, True),
+                        CONF_AAAA_CHECK_ENABLED: user_input.get(CONF_AAAA_CHECK_ENABLED, False),
                     },
                 )
 
@@ -118,6 +122,7 @@ class StratoDynDNSOptionsFlow(config_entries.OptionsFlow):
         current_interval = effective.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
         current_ipv6 = effective.get(CONF_IPV6_ENABLED, False)
         current_notifications = effective.get(CONF_NOTIFICATIONS_ENABLED, True)
+        current_aaaa_check = effective.get(CONF_AAAA_CHECK_ENABLED, False)
 
         schema = _domain_schema(defaults).extend(
             {
@@ -126,6 +131,7 @@ class StratoDynDNSOptionsFlow(config_entries.OptionsFlow):
                 ): vol.All(int, vol.Range(min=10, max=3600)),
                 vol.Optional(CONF_IPV6_ENABLED, default=current_ipv6): bool,
                 vol.Optional(CONF_NOTIFICATIONS_ENABLED, default=current_notifications): bool,
+                vol.Optional(CONF_AAAA_CHECK_ENABLED, default=current_aaaa_check): bool,
             }
         )
         return self.async_show_form(step_id="init", data_schema=schema, errors=errors)

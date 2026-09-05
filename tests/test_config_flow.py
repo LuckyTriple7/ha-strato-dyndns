@@ -4,6 +4,7 @@ from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResultType
 
 from custom_components.strato_dyndns.const import (
+    CONF_AAAA_CHECK_ENABLED,
     CONF_ACCOUNT_NAME,
     CONF_UPDATE_INTERVAL,
     DOMAIN,
@@ -58,6 +59,39 @@ class TestConfigFlow:
         assert result["data"]["domain_2"] == "vpn.example.de"
         assert result["data"]["domain_main"] == ""
         assert result["data"][CONF_UPDATE_INTERVAL] == 60
+        # Off by default, and not requested here
+        assert result["data"][CONF_AAAA_CHECK_ENABLED] is False
+
+    async def test_aaaa_check_enabled_persists_through_options(self, hass):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_ACCOUNT_NAME: "TestAccount", "username": "u", "password": "p"},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                **_domain_input(domain_1="home.example.de"),
+                CONF_UPDATE_INTERVAL: 30,
+                CONF_AAAA_CHECK_ENABLED: True,
+            },
+        )
+        assert result["data"][CONF_AAAA_CHECK_ENABLED] is True
+
+        entry = hass.config_entries.async_entries(DOMAIN)[0]
+        options_result = await hass.config_entries.options.async_init(entry.entry_id)
+        options_result = await hass.config_entries.options.async_configure(
+            options_result["flow_id"],
+            {
+                **_domain_input(domain_1="home.example.de"),
+                CONF_UPDATE_INTERVAL: 30,
+                CONF_AAAA_CHECK_ENABLED: True,
+            },
+        )
+        assert options_result["type"] == FlowResultType.CREATE_ENTRY
+        assert options_result["data"][CONF_AAAA_CHECK_ENABLED] is True
 
     async def test_empty_domains_shows_error(self, hass):
         result = await hass.config_entries.flow.async_init(

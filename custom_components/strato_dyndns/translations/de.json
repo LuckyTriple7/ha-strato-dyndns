@@ -27,7 +27,8 @@
           "domain_10": "Subdomain 10",
           "update_interval": "Prüfintervall (Sekunden, min. 10)",
           "ipv6_enabled": "IPv6 aktivieren",
-          "notifications_enabled": "Persistente Benachrichtigungen aktivieren"
+          "notifications_enabled": "Persistente Benachrichtigungen aktivieren",
+          "aaaa_check_enabled": "AAAA-Eintrag prüfen (Warnung bei vorhandenem IPv6-DNS-Eintrag)"
         }
       }
     },
@@ -57,7 +58,8 @@
           "domain_10": "Subdomain 10",
           "update_interval": "Prüfintervall (Sekunden, min. 10)",
           "ipv6_enabled": "IPv6 aktivieren",
-          "notifications_enabled": "Persistente Benachrichtigungen aktivieren"
+          "notifications_enabled": "Persistente Benachrichtigungen aktivieren",
+          "aaaa_check_enabled": "AAAA-Eintrag prüfen (Warnung bei vorhandenem IPv6-DNS-Eintrag)"
         }
       }
     },
