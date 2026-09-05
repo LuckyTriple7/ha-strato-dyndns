@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.1.4] - 2026-09-05
+### Fixed
+- Domain devices linked to their account device via `DeviceInfo.via_device` (identifier-based), which Home Assistant flags as deprecated and will remove in 2027.8.0. The account device is now registered explicitly on setup, and domain devices link to it via `via_device_id` (its actual device id)
+
 ## [1.1.3] - 2026-08-20
 
 ## What's Changed

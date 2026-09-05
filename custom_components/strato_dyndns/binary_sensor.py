@@ -43,7 +43,7 @@ def _domain_device_info(coordinator: StratoDynDNSCoordinator, domain: str) -> De
         name=domain,
         manufacturer="Strato AG",
         model="DynDNS",
-        via_device=(DOMAIN, coordinator.account_name),
+        via_device_id=coordinator.account_device_id,
     )
 
 
