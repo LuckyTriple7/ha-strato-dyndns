@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.1] - 2026-10-13
+### Fixed
+- **Unwanted AAAA records after an IPv4 outage.** The public IPv4 lookup accepted whatever the provider returned. One of the fallback providers (`ifconfig.me`) is dual-stack, so while IPv4 was down it was reached over IPv6 and answered with the IPv6 address. That address was then sent to Strato as `myip`, creating an AAAA record on every managed domain — even with "Enable IPv6" turned off. The lookup now only accepts a valid IPv4 address; if none can be determined, the cycle fails and nothing is sent
+  - AAAA records created this way are not removed automatically — delete them in the Strato customer area
+
 ## [1.2.0] - 2026-09-05
 ### Added
 - **New option: "Check for AAAA record"** (`aaaa_check_enabled`, off by default) — independent of "Enable IPv6", which manages actually sending AAAA updates. This is a passive monitor for setups where IPv6 doesn't work but a stray AAAA record (leftover, or added elsewhere) would still make dual-stack clients try, and fail, to reach the domain over IPv6

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import ipaddress
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -37,7 +38,11 @@ async def async_get_public_ip(session: aiohttp.ClientSession) -> tuple[str, str]
             async with asyncio.timeout(10):
                 async with session.get(url) as resp:
                     if resp.status == 200:
-                        return (await resp.text()).strip(), url
+                        text = (await resp.text()).strip()
+                        # Dual-stack providers answer with an IPv6 address when
+                        # IPv4 is down — never accept that as the IPv4 address.
+                        ipaddress.IPv4Address(text)
+                        return text, url
         except Exception:
             continue
     return None

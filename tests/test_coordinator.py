@@ -55,6 +55,20 @@ class TestAsyncGetPublicIp:
 
         assert await async_get_public_ip(mock_session) is None
 
+    async def test_rejects_ipv6_answer_from_dual_stack_provider(self):
+        # With IPv4 down, a dual-stack provider is reached over IPv6 and
+        # answers with the IPv6 address. That must not be sent as myip.
+        mock_resp = AsyncMock()
+        mock_resp.status = 200
+        mock_resp.text = AsyncMock(return_value="2001:db8::1")
+        mock_resp.__aenter__ = AsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = AsyncMock(return_value=False)
+
+        mock_session = MagicMock()
+        mock_session.get = MagicMock(return_value=mock_resp)
+
+        assert await async_get_public_ip(mock_session) is None
+
 
 class TestAsyncResolveIp:
     async def test_resolves_domain(self):
