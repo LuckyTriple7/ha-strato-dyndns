@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.2] - 2026-10-15
+
+## What's Changed
+* chore(deps): Bump dnspython from 2.8.0 to 2.9.0 by @dependabot[bot] in https://github.com/LuckyTriple7/ha-strato-dyndns/pull/6
+
+
+**Full Changelog**: https://github.com/LuckyTriple7/ha-strato-dyndns/compare/v1.2.1...v1.2.2
+
+
 ## [1.2.1] - 2026-10-13
 ### Fixed
 - **Unwanted AAAA records after an IPv4 outage.** The public IPv4 lookup accepted whatever the provider returned. One of the fallback providers (`ifconfig.me`) is dual-stack, so while IPv4 was down it was reached over IPv6 and answered with the IPv6 address. That address was then sent to Strato as `myip`, creating an AAAA record on every managed domain — even with "Enable IPv6" turned off. The lookup now only accepts a valid IPv4 address; if none can be determined, the cycle fails and nothing is sent
